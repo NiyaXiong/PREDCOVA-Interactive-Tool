@@ -1,0 +1,1813 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PREDCOVA Cross-Fit Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: a settings column on the left, results in tabs on the right; tables in journal style (rules above and below, no boxes). */
+:root {
+  --bg: #f4f6f8; --surface: #ffffff; --soft: #e9eef2; --ink: #17212b; --muted: #5a6672; --rule: #d3dae1;
+  --accent: #0f5f78; --accent-ink: #ffffff; --good: #1d7a46; --bad: #b42318; --warn: #8a5a00;
+  --s-none: #6b7682; --s-fixed: #2a78d6; --s-trial: #eb6834; --s-pool: #1baf7a; --s-oracle: #e87ba4;
+  --font-body: "Avenir Next", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-head: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #10161b; --surface: #182129; --soft: #212c35; --ink: #e6ebf0; --muted: #9aa7b3; --rule: #2e3a45;
+  --accent: #63bcd8; --accent-ink: #0b1419; --good: #5cc98b; --bad: #ff8a7a; --warn: #e0b252;
+  --s-none: #9aa7b3; --s-fixed: #3987e5; --s-trial: #d95926; --s-pool: #199e70; --s-oracle: #d55181; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #10161b; --surface: #182129; --soft: #212c35; --ink: #e6ebf0; --muted: #9aa7b3; --rule: #2e3a45;
+  --accent: #63bcd8; --accent-ink: #0b1419; --good: #5cc98b; --bad: #ff8a7a; --warn: #e0b252;
+  --s-none: #9aa7b3; --s-fixed: #3987e5; --s-trial: #d95926; --s-pool: #199e70; --s-oracle: #d55181; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 var(--font-body); }
+.wrap { max-width: 1500px; margin: 0 auto; padding-block: 18px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--font-head); font-weight: 600; text-wrap: balance; margin: 0; }
+h1 { font-size: 26px; letter-spacing: -0.01em; }
+h2 { font-size: 19px; margin-top: 4px; }
+h3 { font-size: 15px; margin-top: 18px; }
+p { margin: 6px 0; max-width: 75ch; }
+.top { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: baseline; justify-content: space-between; border-bottom: 2px solid var(--ink); padding-bottom: 10px; }
+.top .sub { color: var(--muted); margin: 2px 0 0; }
+.rule-note { font-size: 12.5px; color: var(--warn); border: 1px solid var(--rule); border-left: 3px solid var(--warn); background: var(--surface); padding: 5px 10px; max-width: 46ch; }
+.layout { display: grid; grid-template-columns: minmax(300px, 370px) minmax(0, 1fr); gap: 20px; margin-top: 16px; align-items: start; }
+@media (max-width: 920px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+#setup, main { min-width: 0; }
+details.sec { background: var(--surface); border: 1px solid var(--rule); border-radius: 4px; margin-bottom: 8px; }
+details.sec > summary { cursor: pointer; padding: 8px 12px; font-family: var(--font-head); font-size: 15px; font-weight: 600; }
+details.sec > .body { padding: 2px 12px 12px; display: grid; gap: 8px; }
+label.f { display: grid; gap: 2px; font-size: 12px; color: var(--muted); min-width: 0; }
+.row { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; }
+input, select, textarea, button { font: inherit; color: var(--ink); }
+input[type=text], input[type=number], select, textarea { width: 100%; min-width: 0; background: var(--bg); border: 1px solid var(--rule); border-radius: 3px; padding: 4px 6px; }
+input.fx, textarea { font-family: var(--font-mono); font-size: 12.5px; }
+textarea { min-height: 110px; resize: vertical; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+button { cursor: pointer; border: 1px solid var(--rule); background: var(--surface); border-radius: 3px; padding: 5px 12px; }
+button:hover { border-color: var(--accent); }
+button.pri { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+button.mini { padding: 1px 7px; font-size: 12px; }
+button:disabled { opacity: 0.5; cursor: default; }
+.btns { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.cov, .meth { border-top: 1px solid var(--rule); padding-top: 6px; display: grid; gap: 4px; }
+.cov .l1 { display: grid; grid-template-columns: 62px minmax(0, 1fr) 56px 56px auto; gap: 4px; align-items: center; }
+table.cm { border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
+table.cm th, table.cm td { padding: 2px 3px; text-align: center; color: var(--muted); font-weight: 400; }
+table.cm input { width: 58px; padding: 2px 3px; font-size: 12px; text-align: center; }
+.meth .fm { font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); overflow-wrap: anywhere; line-height: 1.45; }
+.grp { border-top: 1px solid var(--rule); padding-top: 6px; display: grid; gap: 4px; } .grp > b { font-size: 12.5px; font-weight: 600; }
+details.adv > summary { cursor: pointer; font-size: 12px; color: var(--muted); } details.adv > .row { margin-top: 6px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin: 12px 0 6px; }
+.card { border: 1px solid var(--rule); border-top: 3px solid var(--accent); border-radius: 4px; padding: 10px 12px; background: var(--bg); min-width: 0; }
+.card .k { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.card .big { font-family: var(--font-head); font-size: 28px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.card p { margin: 4px 0 0; font-size: 13px; }
+details.tech { margin-top: 16px; border-top: 1px solid var(--rule); padding-top: 8px; } details.tech > summary { cursor: pointer; font-family: var(--font-head); font-weight: 600; font-size: 15px; }
+.meth .l1 { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 6px; align-items: center; }
+.meth .l2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 4px; }
+.meth select { font-size: 12px; padding: 2px 4px; }
+.hint { font-size: 12px; color: var(--muted); margin: 0; }
+.err { color: var(--bad); font-size: 13px; margin: 4px 0; white-space: pre-wrap; }
+.tabs { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--rule); margin-bottom: 14px; }
+.tabs button { border: 0; border-bottom: 3px solid transparent; border-radius: 0; background: none; padding: 7px 13px; color: var(--muted); }
+.tabs button[aria-selected=true] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 600; }
+.panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 4px; padding: 14px 16px 18px; }
+.tw { overflow-x: auto; margin: 8px 0; }
+table.j { border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); }
+table.j th { text-align: right; font-weight: 600; padding: 5px 10px; border-bottom: 1px solid var(--ink); white-space: nowrap; vertical-align: bottom; }
+table.j td { text-align: right; padding: 3px 10px; white-space: nowrap; }
+table.j th:first-child, table.j td:first-child { text-align: left; padding-left: 2px; }
+table.j td.wrapok { white-space: normal; min-width: 22ch; text-align: left; }
+table.j tr.refrow td { background: var(--soft); }
+.cap { font-size: 12.5px; color: var(--muted); max-width: 95ch; margin: 4px 0 0; }
+.pass { color: var(--good); font-weight: 600; } .fail { color: var(--bad); font-weight: 600; }
+svg.ch { width: 100%; height: auto; display: block; max-width: 820px; }
+svg.ch text { font-family: var(--font-body); font-size: 12px; fill: var(--muted); }
+svg.ch .ax { stroke: var(--rule); stroke-width: 1; fill: none; }
+svg.ch .lab { fill: var(--ink); }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12.5px; margin: 6px 0; }
+.legend span { display: inline-flex; align-items: center; gap: 5px; }
+progress { width: 100%; height: 8px; accent-color: var(--accent); }
+#tip { position: fixed; z-index: 20; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 12px; padding: 4px 8px; border-radius: 3px; max-width: 320px; white-space: pre-line; }
+.facts { display: flex; flex-wrap: wrap; gap: 4px 22px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.facts b { font-weight: 600; }
+.guide h3 { margin-top: 20px; } .guide li { margin: 3px 0; max-width: 75ch; } .guide code, .mono { font-family: var(--font-mono); font-size: 12.5px; }
+.logitem { border-top: 1px solid var(--rule); padding: 8px 0; }
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>PREDCOVA Cross-Fit Lab</h1>
+      <p class="sub">Simulate a Phase 2 trial and a Phase 3 trial, build the digital twin in different ways, and compare the estimates of the average treatment effect.</p>
+    </div>
+    <div class="rule-note">For checking and exploring only. Numbers for a manuscript come from the R engine, not from this page.</div>
+  </div>
+
+  <div class="layout">
+    <div id="setup"></div>
+    <main>
+      <div class="tabs" role="tablist" id="tabs"></div>
+      <div class="panel" id="tab-trial"></div>
+      <div class="panel" id="tab-sim" hidden></div>
+      <div class="panel" id="tab-data" hidden></div>
+      <div class="panel" id="tab-log" hidden></div>
+      <div class="panel guide" id="tab-guide" hidden></div>
+    </main>
+  </div>
+</div>
+<div id="tip" hidden></div>
+
+<script>
+// =============================================================================
+// core.js  --  numerical core of the PREDCOVA Cross-Fit Lab
+// =============================================================================
+// Written from the formulas of the PREDCOVA paper and the pre-specification
+// note, NOT translated from functions.R. No DOM access: the same code runs in
+// the page, in Web Workers and in a command-line JavaScript engine.
+//
+// Sections
+//   1. random numbers          5. SBML twin learner
+//   2. probability functions   6. twins and folds
+//   3. formula parser          7. estimators
+//   4. data model              8. one repetition, summaries, benchmarks
+//   9. self-tests
+// =============================================================================
+function coreFactory() {
+'use strict';
+const EPS = 2.220446049250313e-16;
+
+// ---------------------------------------------------------------------------
+// 1. RANDOM NUMBERS  (xoshiro128**, seeded by splitmix32)
+// ---------------------------------------------------------------------------
+// makeRng(seed, a, b): one independent stream per (seed, a, b). The tool uses
+// a = repetition number, b = sweep point, so a repetition gives the same data
+// whatever the number of workers or the methods switched on.
+function makeRng(seed, a, b, salt) {
+  let h = seed >>> 0;
+  const sm = () => { h = (h + 0x9E3779B9) >>> 0; let z = h;
+    z = Math.imul(z ^ (z >>> 16), 0x85EBCA6B); z = Math.imul(z ^ (z >>> 13), 0xC2B2AE35);
+    return (z ^ (z >>> 16)) >>> 0; };
+  h = (sm() ^ Math.imul((a >>> 0) + 1, 0x9E3779B1)) >>> 0;
+  h = (sm() ^ Math.imul((b >>> 0) + 1, 0x85EBCA77)) >>> 0;
+  let s0 = sm(), s1 = sm(), s2 = sm(), s3 = sm();
+  // salt (twin streams of forest and boosting): changes one state word, so such a stream can never equal a data stream
+  if (salt) s3 = (s3 ^ salt) >>> 0;
+  if (!(s0 | s1 | s2 | s3)) s0 = 1;
+  const rotl = (x, k) => (x << k) | (x >>> (32 - k));
+  const u32 = () => { const r = Math.imul(rotl(Math.imul(s1, 5), 7), 9) >>> 0, t = s1 << 9;
+    s2 ^= s0; s3 ^= s1; s1 ^= s2; s0 ^= s3; s2 ^= t; s3 = rotl(s3, 11); return r; };
+  const unif = () => { let u;                       // uniform on (0, 1), 53 bits
+    do { const hi = u32() >>> 5, lo = u32() >>> 6; u = (hi * 67108864 + lo) / 9007199254740992; } while (u === 0);
+    return u; };
+  let spare = null;
+  const norm = () => {                              // polar Box-Muller
+    if (spare !== null) { const s = spare; spare = null; return s; }
+    let u, v, q;
+    do { u = 2 * unif() - 1; v = 2 * unif() - 1; q = u * u + v * v; } while (q >= 1 || q === 0);
+    const f = Math.sqrt(-2 * Math.log(q) / q); spare = v * f; return u * f; };
+  const gamma = (shape, rate) => {                  // Marsaglia-Tsang
+    if (shape < 1) return gamma(shape + 1, rate) * Math.pow(unif(), 1 / shape);
+    const d = shape - 1 / 3, c = 1 / Math.sqrt(9 * d);
+    for (;;) { const x = norm(), v0 = 1 + c * x; if (v0 <= 0) continue;
+      const v = v0 * v0 * v0, u = unif();
+      if (u < 1 - 0.0331 * x * x * x * x || Math.log(u) < 0.5 * x * x + d * (1 - v + Math.log(v))) return d * v / rate; } };
+  const shuffle = (arr) => { for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(unif() * (i + 1)), t = arr[i]; arr[i] = arr[j]; arr[j] = t; } return arr; };
+  return { unif, norm, gamma, shuffle };
+}
+
+// ---------------------------------------------------------------------------
+// 2. PROBABILITY FUNCTIONS
+// ---------------------------------------------------------------------------
+// Standard normal: returns [P(Z <= x), P(Z > x)]. Series for |x| <= 3,
+// continued fraction for the tail beyond 3.
+function pnormBoth(x) {
+  const ax = Math.abs(x), phi = Math.exp(-0.5 * ax * ax) / 2.5066282746310002;
+  let up;
+  if (ax <= 3) { let term = ax, sum = ax;
+    for (let k = 1; k < 300; k++) { term *= ax * ax / (2 * k + 1); sum += term; if (term < sum * 1e-17) break; }
+    up = 0.5 - phi * sum;
+  } else { let cf = 0; for (let k = 200; k >= 1; k--) cf = k / (ax + cf); up = phi / (ax + cf); }
+  return x >= 0 ? [1 - up, up] : [up, 1 - up];
+}
+function qnorm(p) {                                  // bisection, enough for critical values
+  let lo = -40, hi = 40;
+  for (let i = 0; i < 200; i++) { const mid = 0.5 * (lo + hi); if (pnormBoth(mid)[0] < p) lo = mid; else hi = mid; }
+  return 0.5 * (lo + hi);
+}
+function lgamma(x) {                                 // Lanczos, g = 7
+  const c = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313,
+    -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+  if (x < 0.5) return Math.log(Math.PI / Math.sin(Math.PI * x)) - lgamma(1 - x);
+  x -= 1; let a = c[0]; const t = x + 7.5;
+  for (let i = 1; i < 9; i++) a += c[i] / (x + i);
+  return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a);
+}
+function betacf(a, b, x) {                           // continued fraction of the incomplete beta
+  const TINY = 1e-300, qab = a + b, qap = a + 1, qam = a - 1;
+  let c = 1, d = 1 - qab * x / qap; if (Math.abs(d) < TINY) d = TINY; d = 1 / d; let h = d;
+  for (let m = 1; m <= 1000; m++) { const m2 = 2 * m;
+    let aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+    d = 1 + aa * d; if (Math.abs(d) < TINY) d = TINY; c = 1 + aa / c; if (Math.abs(c) < TINY) c = TINY; d = 1 / d; h *= d * c;
+    aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+    d = 1 + aa * d; if (Math.abs(d) < TINY) d = TINY; c = 1 + aa / c; if (Math.abs(c) < TINY) c = TINY; d = 1 / d;
+    const del = d * c; h *= del; if (Math.abs(del - 1) < 3e-16) break; }
+  return h;
+}
+function betai(a, b, x) {                            // regularized incomplete beta I_x(a, b)
+  if (x <= 0) return 0; if (x >= 1) return 1;
+  const bt = Math.exp(lgamma(a + b) - lgamma(a) - lgamma(b) + a * Math.log(x) + b * Math.log(1 - x));
+  return x < (a + 1) / (a + b + 2) ? bt * betacf(a, b, x) / a : 1 - bt * betacf(b, a, 1 - x) / b;
+}
+// two-sided p-value of a t statistic with df degrees of freedom
+function pt2(t, df) { return betai(df / 2, 0.5, df / (df + t * t)); }
+
+// ---------------------------------------------------------------------------
+// 3. FORMULA PARSER  (no eval; safe for formulas typed by any user)
+// ---------------------------------------------------------------------------
+// Operators: + - * / ^, comparisons (< > <= >= == !=) that return 1 or 0,
+// & | !, parentheses. Functions: see FUNS. Constant: pi.
+// As in R, a leading ! applies to the whole comparison: !a > b means !(a > b).
+// A function called with the wrong number of arguments is an error.
+// compileExpr("0.7*cos(x1)", ["x1"]) returns a function of the covariate row.
+const FUNS = { sin: Math.sin, cos: Math.cos, tan: Math.tan, exp: Math.exp, log: Math.log, sqrt: Math.sqrt,
+  abs: Math.abs, floor: Math.floor, min: Math.min, max: Math.max, pow: Math.pow,
+  expit: x => 1 / (1 + Math.exp(-x)), pnorm: x => pnormBoth(x)[0], ind: x => (x ? 1 : 0) };
+const ARITY = { min: [2, 99], max: [2, 99], pow: [2, 2] };          // every other function takes exactly one argument
+const CMP = { '<': (a, b) => a < b, '>': (a, b) => a > b, '<=': (a, b) => a <= b, '>=': (a, b) => a >= b,
+  '==': (a, b) => a === b, '!=': (a, b) => a !== b };
+function compileExpr(src, vars) {
+  const s = String(src == null ? '' : src), toks = [];
+  const re = /\s*(?:(\d+\.?\d*(?:[eE][+-]?\d+)?|\.\d+(?:[eE][+-]?\d+)?)|([A-Za-z_][A-Za-z0-9_.]*)|(<=|>=|==|!=|&&|\|\||[-+*\/^()<>,!&|]))/y;
+  let pos = 0;
+  while (pos < s.length) {
+    re.lastIndex = pos; const m = re.exec(s);
+    if (!m) { if (/^\s*$/.test(s.slice(pos))) break; throw new Error('cannot read "' + s.slice(pos, pos + 12) + '"'); }
+    if (m[1] !== undefined) toks.push({ t: 'n', v: parseFloat(m[1]) });
+    else if (m[2] !== undefined) toks.push({ t: 'id', v: m[2] });
+    else toks.push({ t: 'op', v: m[3] });
+    pos = re.lastIndex;
+  }
+  if (!toks.length) throw new Error('formula is empty');
+  let k = 0;
+  const isOp = (...vs) => toks[k] && toks[k].t === 'op' && vs.indexOf(toks[k].v) >= 0;
+  const eat = v => { if (isOp(v)) { k++; return true; } return false; };
+  const need = v => { if (!eat(v)) throw new Error('expected "' + v + '"'); };
+  function pOr() { let a = pAnd(); while (isOp('|', '||')) { k++; const l = a, r = pAnd(); a = v => ((l(v) || r(v)) ? 1 : 0); } return a; }
+  function pAnd() { let a = pNot(); while (isOp('&', '&&')) { k++; const l = a, r = pNot(); a = v => ((l(v) && r(v)) ? 1 : 0); } return a; }
+  function pNot() { if (eat('!')) { const a = pNot(); return v => (a(v) ? 0 : 1); } return pCmp(); }
+  function pCmp() { const a = pAdd(); if (toks[k] && toks[k].t === 'op' && CMP[toks[k].v]) {
+    const c = CMP[toks[k++].v], b = pAdd(); return v => (c(a(v), b(v)) ? 1 : 0); } return a; }
+  function pAdd() { let a = pMul(); while (isOp('+', '-')) { const op = toks[k++].v, l = a, r = pMul();
+    a = op === '+' ? (v => l(v) + r(v)) : (v => l(v) - r(v)); } return a; }
+  function pMul() { let a = pUnary(); while (isOp('*', '/')) { const op = toks[k++].v, l = a, r = pUnary();
+    a = op === '*' ? (v => l(v) * r(v)) : (v => l(v) / r(v)); } return a; }
+  function pUnary() { if (eat('-')) { const a = pUnary(); return v => -a(v); } if (eat('+')) return pUnary();
+    if (eat('!')) { const a = pUnary(); return v => (a(v) ? 0 : 1); } return pPow(); }
+  function pPow() { const a = pPrim(); if (eat('^')) { const b = pUnary(); return v => Math.pow(a(v), b(v)); } return a; }
+  function pPrim() { const t = toks[k++];
+    if (!t) throw new Error('formula ends too early');
+    if (t.t === 'n') { const c = t.v; return () => c; }
+    if (t.t === 'id') {
+      if (eat('(')) { const fn = FUNS[t.v]; if (!fn) throw new Error('unknown function "' + t.v + '"');
+        const args = []; if (!eat(')')) { do { args.push(pOr()); } while (eat(',')); need(')'); }
+        const ar = ARITY[t.v] || [1, 1];
+        if (args.length < ar[0] || args.length > ar[1]) throw new Error(t.v + '() takes ' + (ar[0] === ar[1] ? ar[0] : 'at least ' + ar[0]) + ' argument' + (ar[0] === 1 && ar[1] === 1 ? '' : 's') + ', not ' + args.length);
+        if (args.length === 1) { const a0 = args[0]; return v => fn(a0(v)); }
+        if (args.length === 2) { const a0 = args[0], a1 = args[1]; return v => fn(a0(v), a1(v)); }
+        return v => fn(...args.map(a => a(v))); }
+      if (t.v === 'pi') return () => Math.PI;
+      const ix = vars.indexOf(t.v); if (ix < 0) throw new Error('unknown name "' + t.v + '"');
+      return v => v[ix]; }
+    if (t.t === 'op' && t.v === '(') { const a = pOr(); need(')'); return a; }
+    throw new Error('unexpected "' + t.v + '"'); }
+  const out = pOr();
+  if (k < toks.length) throw new Error('unexpected "' + toks[k].v + '"');
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// 4. DATA MODEL
+// ---------------------------------------------------------------------------
+// Y = f(x) + g(x) T + sigma(x) e,  e ~ N(0, 1).
+// Settings S (plain JSON) hold the covariates, the three formulas, the design,
+// the cross-fitting choices and the list of methods. compile(S) checks them.
+const DISTS = { unif: 'Uniform(a, b)', norm: 'Normal(mean a, SD b)', exp: 'Exponential(rate a)',
+  gamma: 'Gamma(shape a, rate b)', bern: 'Binary(P(1) = a)' };
+function compile(S) {
+  const names = S.covs.map(c => String(c.name).trim()), p = names.length;
+  if (!p) throw new Error('add at least one covariate');
+  names.forEach((nm, i) => { if (!/^[A-Za-z_][A-Za-z0-9_.]*$/.test(nm)) throw new Error('covariate name "' + nm + '" is not valid');
+    if (names.indexOf(nm) !== i) throw new Error('covariate name "' + nm + '" is used twice');
+    if (FUNS[nm] || nm === 'pi') throw new Error('"' + nm + '" is a reserved name'); });
+  S.covs.forEach(c => { if (!DISTS[c.dist]) throw new Error('unknown distribution for ' + c.name);
+    const isNum = v => typeof v === 'number' && isFinite(v);        // an emptied field arrives as null
+    if (!isNum(c.a) || ((c.dist === 'unif' || c.dist === 'norm' || c.dist === 'gamma') && !isNum(c.b))) throw new Error('missing parameter for ' + c.name);
+    if (c.dist === 'unif' && !(c.b > c.a)) throw new Error(c.name + ': need b > a');
+    if ((c.dist === 'norm' || c.dist === 'gamma') && !(c.b > 0)) throw new Error(c.name + ': b must be positive');
+    if ((c.dist === 'exp' || c.dist === 'gamma') && !(c.a > 0)) throw new Error(c.name + ': a must be positive');
+    if (c.dist === 'bern' && !(c.a > 0 && c.a < 1)) throw new Error(c.name + ': a must be between 0 and 1'); });
+  const wrap = (label, src) => { try { return compileExpr(src, names); } catch (e) { throw new Error(label + ': ' + e.message); } };
+  const C = { S, names, p, f: wrap('f(x)', S.f), g: wrap('g(x)', S.g), sd: wrap('noise SD', S.sigma) };
+  // z(x) of PREDCOVA: free-form terms typed by the user; the constant 1 is always its first element.
+  // Settings written before 2026-11-19 give "modifier covariates + degree" instead: the powers 1..degree.
+  let zt = S.zTerms;
+  if (!zt) { zt = []; (S.modCovs || []).forEach(nm => { const s = String(nm).trim();
+    if (names.indexOf(s) < 0) throw new Error('modifier covariate "' + nm + '" is not a covariate');
+    for (let e = 1; e <= (S.degree | 0); e++) zt.push(e === 1 ? s : s + '^' + e); }); }
+  C.zSrc = zt.map(s => String(s).trim()).filter(Boolean);
+  C.z = C.zSrc.map((s, j) => wrap('z(x), term ' + (j + 1) + ' "' + s + '"', s));
+  C.modIx = (S.modCovs || []).map(nm => names.indexOf(String(nm).trim())).filter(i => i >= 0);   // old scripts only
+  C.copula = copulaOf(S, p);
+  ['n3c', 'n3t', 'n2c', 'n2t'].forEach(q => { if (!(S[q] >= 0) || S[q] !== Math.floor(S[q])) throw new Error('sample sizes must be whole numbers'); });
+  if (S.n3c < 4 || S.n3t < 4) throw new Error('Phase 3 needs at least 4 patients per arm');
+  if (!(S.K >= 2) || S.K !== Math.floor(S.K)) throw new Error('number of folds K must be a whole number, 2 or more');
+  if (S.K > Math.min(S.n3c, S.n3t)) throw new Error('K cannot exceed the smaller Phase 3 arm');
+  if (S.alpha !== undefined && !(S.alpha > 0 && S.alpha < 1)) throw new Error('the test level α must be between 0 and 1');
+  C.methods = S.methods.filter(m => m.on);
+  if (!C.methods.length) throw new Error('switch on at least one method');
+  C.methods.forEach(m => { if (usesTwin(m)) { const tw = m.twin || {};
+    if (tw.p3 !== 'none' && tw.p3 !== 'oof') throw new Error(m.label + ': Phase 3 patients can train a twin only by cross-fitting');
+    if (tw.p2 === 'none' && tw.p3 === 'none') throw new Error(m.label + ': the twin has no training data');
+    if (tw.p2 !== 'none' && (tw.p2 === 'c' ? S.n2c : S.n2c + S.n2t) === 0) throw new Error(m.label + ': this method uses Phase 2 patients, but the Phase 2 size is 0. Set a Phase 2 size or choose "Phase 2: not used".');
+    if (tw.p2 !== 'none' && tw.p3 === 'none' && (tw.p2 === 'c' ? S.n2c : S.n2c + S.n2t) < 3) throw new Error(m.label + ': Phase 2 is too small to train a twin');
+    if (m.learner && !LEARNERS[m.learner]) throw new Error(m.label + ': unknown learner "' + m.learner + '"');
+    if (m.learner === 'gbm') {                        // boosting needs enough drawn patients to split a tree at all
+      const P = twinPrmOf(S.twinPrm).gbm, n3 = tw.p3 === 'none' ? 0 : (S.K - 1) / S.K * (tw.arms3 === 'ct' ? S.n3c + S.n3t : S.n3c);
+      const nt = Math.floor((tw.p2 === 'none' ? 0 : tw.p2 === 'c' ? S.n2c : S.n2c + S.n2t) + n3), nb = P.bag >= 1 ? nt : Math.max(2, Math.round(P.bag * nt));
+      if (nb < 2 * P.minNode) throw new Error(m.label + ': boosting cannot split a tree with about ' + nt + ' training patients (' + nb + ' drawn per tree, ' + P.minNode + ' needed in each leaf). In section 4, lower the patients per leaf or raise the share of patients per tree.'); }
+    if (byFold(m)) { const ncol = m.model === 'procova' ? 3 : 3 + C.z.length, nk = Math.floor(S.n3c / S.K) + Math.floor(S.n3t / S.K);
+      if (nk < ncol + 2) throw new Error(m.label + ': a fold has about ' + nk + ' patients, too few for a separate regression with ' + ncol + ' coefficients. Lower K or use one regression.'); } } });
+  C.twinPrm = twinPrmOf(S.twinPrm);
+  if (C.methods.some(m => m.model === 'predcova') && 3 + C.z.length + 2 > S.n3c + S.n3t) throw new Error('z(x) has too many terms for this Phase 3 size');
+  checkZ(C);
+  return C;
+}
+
+// Correlation among covariates: Gaussian copula. S.corr is the p x p correlation
+// matrix of the underlying normal variables (symmetric, 1 on the diagonal). A
+// covariate with no non-zero entry is drawn on its own. Gamma covariates are
+// always independent. Settings written before 2026-11-19 give one number rho and
+// a tick per covariate: the matrix with rho between the ticked covariates.
+function copulaOf(S, p) {
+  let R = S.corr;
+  if (!R) { const rho = Math.max(0, Math.min(0.999, +S.rho || 0));
+    R = S.covs.map((a, i) => S.covs.map((b, j) => i === j ? 1 : (a.corr && b.corr && a.dist !== 'gamma' && b.dist !== 'gamma' ? rho : 0))); }
+  if (!Array.isArray(R) || R.length !== p || R.some(r => !Array.isArray(r) || r.length !== p)) throw new Error('the correlation matrix must have one row and one column per covariate');
+  const idx = [];
+  for (let i = 0; i < p; i++) { let any = false;
+    for (let j = 0; j < p; j++) { if (i === j) continue; const v = +R[i][j];
+      if (!isFinite(v) || Math.abs(v) >= 1) throw new Error('the correlation of ' + S.covs[i].name + ' and ' + S.covs[j].name + ' must be a number between -1 and 1');
+      if (Math.abs(v - +R[j][i]) > 1e-12) throw new Error('the correlation matrix is not symmetric (' + S.covs[i].name + ', ' + S.covs[j].name + ')');
+      if (v !== 0) { if (S.covs[i].dist === 'gamma' || S.covs[j].dist === 'gamma') throw new Error('a Gamma covariate cannot be correlated here; set its correlations to 0'); any = true; } }
+    if (any) idx.push(i); }
+  const m = idx.length, L = [];                      // Cholesky factor of the correlated block
+  for (let a = 0; a < m; a++) { L.push(new Float64Array(m));
+    for (let b = 0; b <= a; b++) { let s = a === b ? 1 : +R[idx[a]][idx[b]]; for (let k = 0; k < b; k++) s -= L[a][k] * L[b][k];
+      if (a === b) { if (!(s > 1e-10)) throw new Error('the correlation matrix is not positive definite: these correlations cannot all hold together'); L[a][a] = Math.sqrt(s); }
+      else L[a][b] = s / L[b][b]; } }
+  const pos = new Array(p).fill(-1); idx.forEach((k, a) => { pos[k] = a; });
+  return { idx, L, pos };
+}
+
+// The terms of z(x) must be finite and must not repeat the constant or each other.
+function checkZ(C) {
+  if (!C.z.length) return;
+  const d = drawData(C, 2000, 0, makeRng(20261119, 3, 3)), Z = zCols(d, C.z);
+  for (let j = 1; j < Z.length; j++) for (let i = 0; i < d.n; i++) if (!isFinite(Z[j][i])) throw new Error('z(x), term ' + j + ' "' + C.zSrc[j - 1] + '" is not finite for some patients');
+  const fit = lm(Z, new Float64Array(d.n));
+  for (let j = 1; j < Z.length; j++) if (fit.pos[j] < 0) throw new Error('z(x), term ' + j + ' "' + C.zSrc[j - 1] + '" is constant or repeats the terms before it');
+}
+const usesTwin = m => m.model === 'procova' || m.model === 'predcova';
+// true when the method analyses each fold separately and averages (see estByFold).
+// The default is ONE regression on all patients (the main estimator, as in the R engine);
+// fold by fold is used only when the method says est === 'fold'.
+const byFold = m => usesTwin(m) && m.twin && m.twin.p3 === 'oof' && m.est === 'fold';
+
+// Draw nc controls and nt treated patients (controls first).
+function drawData(C, nc, nt, rng) {
+  const S = C.S, n = nc + nt, p = C.p, X = [];
+  for (let k = 0; k < p; k++) X.push(new Float64Array(n));
+  const t = new Uint8Array(n), y = new Float64Array(n), f = new Float64Array(n), g = new Float64Array(n), row = new Array(p);
+  const cop = C.copula, mc = cop.idx.length, ee = new Float64Array(mc), zc = new Float64Array(mc);
+  for (let i = 0; i < n; i++) {
+    t[i] = i < nc ? 0 : 1;
+    if (mc) {                                        // correlated normals z = L e for the correlated covariates
+      for (let a = 0; a < mc; a++) ee[a] = rng.norm();
+      for (let a = 0; a < mc; a++) { let s = 0; const La = cop.L[a]; for (let b = 0; b <= a; b++) s += La[b] * ee[b]; zc[a] = s; } }
+    for (let k = 0; k < p; k++) { const c = S.covs[k]; let x;
+      if (cop.pos[k] >= 0) {
+        // Gaussian copula: the normal variable is mapped to the covariate's own distribution
+        const z = zc[cop.pos[k]], P = pnormBoth(z);
+        x = c.dist === 'norm' ? c.a + c.b * z : c.dist === 'unif' ? c.a + (c.b - c.a) * P[0]
+          : c.dist === 'exp' ? -Math.log(P[1]) / c.a : (P[1] < c.a ? 1 : 0);
+      } else {
+        x = c.dist === 'norm' ? c.a + c.b * rng.norm() : c.dist === 'unif' ? c.a + (c.b - c.a) * rng.unif()
+          : c.dist === 'exp' ? -Math.log(rng.unif()) / c.a : c.dist === 'gamma' ? rng.gamma(c.a, c.b) : (rng.unif() < c.a ? 1 : 0);
+      }
+      X[k][i] = x; row[k] = x; }
+    f[i] = C.f(row); g[i] = S.effect ? C.g(row) : 0;
+    y[i] = f[i] + t[i] * g[i] + C.sd(row) * rng.norm();
+    if (!isFinite(y[i])) throw new Error('the formulas gave a non-finite outcome; check f, g and the noise SD');
+  }
+  return { n, t, X, y, f, g };
+}
+
+// ---------------------------------------------------------------------------
+// 5. SBML TWIN LEARNER  (published formulas)
+// ---------------------------------------------------------------------------
+//   h(x)   = sum_j w_j(x) y_j / sum_j w_j(x)
+//   w_j(x) = exp( - sum_k r_k^2 (x_k - x_jk)^2 )
+//   r      = chosen by leave-one-out mean squared error: cyclic coordinate
+//            descent from r = 1, Brent search on [0.001, 10] per input,
+//            stop when no r changes by 1e-6 or after 50 cycles.
+// Subtracting the smallest exponent of a row before exp() cancels in the
+// ratio; it only prevents 0 / 0.
+
+// Brent's minimiser on [ax, bx] (Brent 1973, "localmin"; the algorithm behind
+// R's optimize). tol is the absolute accuracy of the returned point.
+function fmin(f, ax, bx, tol) {
+  const c = (3 - Math.sqrt(5)) * 0.5, eps = Math.sqrt(EPS);
+  let a = ax, b = bx, v = a + c * (b - a), w = v, x = v, d = 0, e = 0;
+  let fx = f(x), fv = fx, fw = fx;
+  const tol3 = tol / 3;
+  for (;;) {
+    const xm = (a + b) * 0.5, tol1 = eps * Math.abs(x) + tol3, t2 = tol1 * 2;
+    if (Math.abs(x - xm) <= t2 - (b - a) * 0.5) break;
+    let p = 0, q = 0, r = 0, u;
+    if (Math.abs(e) > tol1) {                        // fit a parabola
+      r = (x - w) * (fx - fv); q = (x - v) * (fx - fw); p = (x - v) * q - (x - w) * r; q = (q - r) * 2;
+      if (q > 0) p = -p; else q = -q;
+      r = e; e = d;
+    }
+    if (Math.abs(p) >= Math.abs(q * 0.5 * r) || p <= q * (a - x) || p >= q * (b - x)) {
+      e = x < xm ? b - x : a - x; d = c * e;         // golden-section step
+    } else {
+      d = p / q; u = x + d;                          // parabolic step
+      if (u - a < t2 || b - u < t2) { d = tol1; if (x >= xm) d = -d; }
+    }
+    u = Math.abs(d) >= tol1 ? x + d : (d > 0 ? x + tol1 : x - tol1);
+    const fu = f(u);
+    if (fu <= fx) { if (u < x) b = x; else a = x; v = w; w = x; x = u; fv = fw; fw = fx; fx = fu; }
+    else { if (u < x) a = u; else b = u;
+      if (fu <= fw || w === x) { v = w; fv = fw; w = u; fw = fu; }
+      else if (fu <= fv || v === x || v === w) { v = u; fv = fu; } }
+  }
+  return x;
+}
+
+// Leave-one-out loss, literal double loop (used by the self-tests).
+function sbmlLooLoss(X, y, r) {
+  const m = y.length, p = X.length; let loss = 0;
+  for (let i = 0; i < m; i++) {
+    const s = []; let mn = Infinity;
+    for (let j = 0; j < m; j++) { if (j === i) { s.push(NaN); continue; }
+      let v = 0; for (let k = 0; k < p; k++) { const d = X[k][i] - X[k][j]; v += r[k] * r[k] * d * d; }
+      s.push(v); if (v < mn) mn = v; }
+    let sw = 0, swy = 0;
+    for (let j = 0; j < m; j++) { if (j === i) continue; const w = Math.exp(mn - s[j]); sw += w; swy += w * y[j]; }
+    const e = swy / sw - y[i]; loss += e * e;
+  }
+  return loss / m;
+}
+
+// Tune r. X = array of p input columns, y = outcomes of the m training patients.
+// For speed the squared differences are stored once and, while one r is
+// searched, the contribution of the other inputs is held in B.
+// o (optional) = { lo, hi, start }: search interval and start value; the
+// defaults 0.001, 10 and 1 are the values of the first PREDCOVA paper.
+function fitSbml(X, y, o) {
+  const m = y.length, p = X.length, mm = m * m, tol = Math.pow(EPS, 0.25);
+  const lo = o && o.lo > 0 ? +o.lo : 1e-3, hi = o && o.hi > lo ? +o.hi : 10, st = o && o.start > 0 ? +o.start : 1;
+  const D = X.map(x => { const d = new Float64Array(mm);
+    for (let i = 0; i < m; i++) for (let j = 0; j < m; j++) { const q = x[i] - x[j]; d[i * m + j] = q * q; } return d; });
+  const r = new Array(p).fill(st), B = new Float64Array(mm), s = new Float64Array(m);
+  for (let it = 0; it < 50; it++) {
+    const old = r.slice();
+    for (let j = 0; j < p; j++) {
+      B.fill(0);
+      for (let k = 0; k < p; k++) if (k !== j) { const c = r[k] * r[k], Dk = D[k]; for (let q = 0; q < mm; q++) B[q] += c * Dk[q]; }
+      const Dj = D[j];
+      r[j] = fmin(rj => { const c = rj * rj; let loss = 0;
+        for (let i = 0; i < m; i++) { const o = i * m; let mn = Infinity;
+          for (let q = 0; q < m; q++) { if (q === i) continue; const v = B[o + q] + c * Dj[o + q]; s[q] = v; if (v < mn) mn = v; }
+          let sw = 0, swy = 0;
+          for (let q = 0; q < m; q++) { if (q === i) continue; const w = Math.exp(mn - s[q]); sw += w; swy += w * y[q]; }
+          const e = swy / sw - y[i]; loss += e * e; }
+        return loss / m; }, lo, hi, tol);
+    }
+    let ch = 0; for (let j = 0; j < p; j++) ch = Math.max(ch, Math.abs(r[j] - old[j]));
+    if (ch < 1e-6) break;
+  }
+  return r;
+}
+
+// Twin score for nt new patients with input columns Xt.
+function predictSbml(X, y, r, Xt, nt) {
+  const m = y.length, p = X.length, out = new Float64Array(nt), s = new Float64Array(m);
+  for (let i = 0; i < nt; i++) { let mn = Infinity;
+    for (let q = 0; q < m; q++) { let v = 0; for (let k = 0; k < p; k++) { const d = Xt[k][i] - X[k][q]; v += r[k] * r[k] * d * d; }
+      s[q] = v; if (v < mn) mn = v; }
+    let sw = 0, swy = 0;
+    for (let q = 0; q < m; q++) { const w = Math.exp(mn - s[q]); sw += w; swy += w * y[q]; }
+    out[i] = swy / sw; }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// 5b. OTHER LEARNERS FOR THE TWIN  (random forest, gradient boosting, ridge, lasso)
+// ---------------------------------------------------------------------------
+// Standard textbook algorithms, written out here so that the page needs no
+// library. They are NOT copies of an R package: a forest or a boosted model
+// gives other numbers than randomForest / gbm on the same data, because the
+// random draws differ. The default settings are conventions:
+//   forest    500 trees; floor(p / 3) covariates tried per split (at least 1);
+//             a node is split while it has more than 5 patients (the defaults
+//             of R's randomForest for regression)
+//   boosting  100 trees, 3 splits per tree, learning rate 0.1 (the settings of
+//             the SBML author's comparison code), half of the patients drawn
+//             for each tree (gbm's default), at least 5 patients per leaf
+//             (gbm's default of 10 cannot run with 30 training patients)
+//   ridge / lasso  covariates standardised, penalty chosen by leave-one-out
+//             squared error over 30 values
+const LEARNERS = { sbml: 'SBML', rf: 'Random forest', gbm: 'Gradient boosting', ridge: 'Ridge regression', lasso: 'Lasso regression' };
+const TWIN_DEFAULTS = () => ({ sbml: { lo: 0.001, hi: 10, start: 1, std: false }, rf: { trees: 500, mtry: 0, minNode: 5 },
+  gbm: { trees: 100, depth: 3, rate: 0.1, bag: 0.5, minNode: 5 }, pen: { nlambda: 30 } });
+// Settings of the learners, checked; anything not given takes its default.
+function twinPrmOf(q) {
+  const d = TWIN_DEFAULTS(), o = q || {}, a = o.sbml || {}, b = o.rf || {}, c = o.gbm || {}, e = o.pen || {};
+  const num = (v, def, lo, hi, what) => { if (v === undefined || v === null || v === '') return def; v = +v;
+    if (!(v >= lo && v <= hi)) throw new Error(what + ' must be between ' + lo + ' and ' + hi); return v; };
+  const out = { sbml: { lo: num(a.lo, d.sbml.lo, 1e-9, 1e3, 'SBML: lower bound of r'), hi: num(a.hi, d.sbml.hi, 1e-6, 1e6, 'SBML: upper bound of r'),
+      start: num(a.start, d.sbml.start, 1e-9, 1e6, 'SBML: start value of r'), std: !!a.std },
+    rf: { trees: Math.round(num(b.trees, d.rf.trees, 1, 5000, 'Forest: number of trees')), mtry: Math.round(num(b.mtry, 0, 0, 1000, 'Forest: covariates per split')),
+      minNode: Math.round(num(b.minNode, d.rf.minNode, 1, 1e6, 'Forest: node size')) },
+    gbm: { trees: Math.round(num(c.trees, d.gbm.trees, 1, 5000, 'Boosting: number of trees')), depth: Math.round(num(c.depth, d.gbm.depth, 1, 30, 'Boosting: splits per tree')),
+      rate: num(c.rate, d.gbm.rate, 1e-4, 1, 'Boosting: learning rate'), bag: num(c.bag, d.gbm.bag, 0.1, 1, 'Boosting: share of patients per tree'),
+      minNode: Math.round(num(c.minNode, d.gbm.minNode, 1, 1e6, 'Boosting: patients per leaf')) },
+    pen: { nlambda: Math.round(num(e.nlambda, d.pen.nlambda, 5, 200, 'Ridge / lasso: number of penalty values')) } };
+  if (!(out.sbml.hi > out.sbml.lo)) throw new Error('SBML: the upper bound of r must be above the lower bound');
+  if (out.sbml.start < out.sbml.lo || out.sbml.start > out.sbml.hi) throw new Error('SBML: the start value of r must lie between the bounds');
+  return out;
+}
+function hashStr(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+
+// Regression tree by least squares, grown best split first.
+//   rows        training rows (a row may repeat)   o.maxSplits  number of splits allowed
+//   o.minSplit  a node with fewer rows is a leaf     o.minLeaf    smallest leaf allowed
+//   o.mtry      covariates tried at a node (drawn at random when fewer than all)
+// A split point is the middle of two neighbouring distinct values; rows with
+// x <= split point go left. Gain of a split = drop in the sum of squares.
+function growTree(X, y, rows, o, rng) {
+  const p = X.length, feat = [], thr = [], lt = [], rt = [], val = [], all = Array.from({ length: p }, (_, j) => j);
+  const mk = idx => { let s = 0; for (let a = 0; a < idx.length; a++) s += y[idx[a]];
+    feat.push(-1); thr.push(0); lt.push(-1); rt.push(-1); val.push(s / idx.length); return { id: feat.length - 1, idx, sum: s, best: null }; };
+  const find = nd => { const n = nd.idx.length; if (n < o.minSplit || n < 2 * o.minLeaf) return;
+    let ss = 0; for (let a = 0; a < n; a++) { const e = y[nd.idx[a]] - nd.sum / n; ss += e * e; }
+    if (!(ss > 0)) return;
+    let feats = all;
+    if (o.mtry < p) { feats = all.slice(); for (let a = 0; a < o.mtry; a++) { const b = a + Math.floor(rng.unif() * (p - a)), t = feats[a]; feats[a] = feats[b]; feats[b] = t; } feats.length = o.mtry; }
+    let bg = 1e-12 * ss;
+    for (const j of feats) { const x = X[j], ord = nd.idx.slice().sort((a, b) => x[a] - x[b]); let sl = 0;
+      for (let q = 0; q < n - 1; q++) { sl += y[ord[q]]; const xa = x[ord[q]], xb = x[ord[q + 1]]; if (xa === xb) continue;
+        const nl = q + 1, nr = n - nl; if (nl < o.minLeaf || nr < o.minLeaf) continue;
+        const g = sl * sl / nl + (nd.sum - sl) * (nd.sum - sl) / nr - nd.sum * nd.sum / n;
+        if (g > bg) { bg = g; nd.best = { j, t: 0.5 * (xa + xb), gain: g, cut: nl, ord }; } } } };
+  const root = mk(rows); find(root); const leaves = [root]; let splits = 0;
+  while (splits < o.maxSplits) { let bi = -1;
+    for (let a = 0; a < leaves.length; a++) if (leaves[a].best && (bi < 0 || leaves[a].best.gain > leaves[bi].best.gain)) bi = a;
+    if (bi < 0) break;
+    const nd = leaves[bi], b = nd.best, lf = mk(b.ord.slice(0, b.cut)), rg = mk(b.ord.slice(b.cut));
+    feat[nd.id] = b.j; thr[nd.id] = b.t; lt[nd.id] = lf.id; rt[nd.id] = rg.id; nd.best = null; find(lf); find(rg); leaves.splice(bi, 1, lf, rg); splits++; }
+  return { feat, thr, lt, rt, val, splits };
+}
+const treeAt = (tr, X, i) => { let k = 0; while (tr.feat[k] >= 0) k = X[tr.feat[k]][i] <= tr.thr[k] ? tr.lt[k] : tr.rt[k]; return tr.val[k]; };
+
+// Random forest: every tree is grown on n rows drawn with replacement and tries
+// mtry randomly chosen covariates at each node; the prediction is the mean of the trees.
+function fitForest(X, y, o, rng) {
+  const n = y.length, p = X.length, mtry = o.mtry > 0 ? Math.min(p, o.mtry) : Math.max(1, Math.floor(p / 3)), trees = [];
+  const to = { maxSplits: Infinity, minSplit: o.minNode + 1, minLeaf: 1, mtry };
+  for (let b = 0; b < o.trees; b++) { const rows = new Array(n); for (let a = 0; a < n; a++) rows[a] = Math.floor(rng.unif() * n); trees.push(growTree(X, y, rows, to, rng)); }
+  return (Xt, nt) => { const out = new Float64Array(nt); for (const tr of trees) for (let i = 0; i < nt; i++) out[i] += treeAt(tr, Xt, i);
+    for (let i = 0; i < nt; i++) out[i] /= trees.length; return out; };
+}
+// Gradient boosting for squared error: start at the mean; each tree is fitted
+// to the current residuals of a random share of the patients (drawn without
+// replacement) and added with the learning rate.
+function fitBoost(X, y, o, rng) {
+  const n = y.length, p = X.length, f0 = mean(y), F = new Float64Array(n).fill(f0), res = new Float64Array(n), trees = [];
+  const nb = o.bag >= 1 ? n : Math.max(2, Math.round(o.bag * n)), to = { maxSplits: o.depth, minSplit: 2 * o.minNode, minLeaf: o.minNode, mtry: p };
+  const all = Array.from({ length: n }, (_, i) => i);
+  for (let b = 0; b < o.trees; b++) {
+    for (let i = 0; i < n; i++) res[i] = y[i] - F[i];
+    const rows = all.slice();
+    if (nb < n) { for (let a = 0; a < nb; a++) { const c = a + Math.floor(rng.unif() * (n - a)), t = rows[a]; rows[a] = rows[c]; rows[c] = t; } rows.length = nb; }
+    const tr = growTree(X, res, rows, to, rng); trees.push(tr);
+    for (let i = 0; i < n; i++) F[i] += o.rate * treeAt(tr, X, i);
+  }
+  return (Xt, nt) => { const out = new Float64Array(nt).fill(f0); for (const tr of trees) for (let i = 0; i < nt; i++) out[i] += o.rate * treeAt(tr, Xt, i); return out; };
+}
+
+// Penalised linear regression (ridge: alpha = 0, lasso: alpha = 1).
+//   minimise  (1 / 2n) sum_i (y_i - b0 - z_i'b)^2 + lambda [ alpha |b|_1 + (1 - alpha) / 2 |b|^2 ]
+// z = covariates standardised with the mean and SD (divisor n) of the training
+// patients; the intercept b0 is not penalised. Solved by cyclic coordinate
+// descent on the cross-product sums. The penalty lambda is chosen by
+// leave-one-out squared error among nlam values, equally spaced on the log
+// scale. Lasso: from the smallest value that sets every coefficient to zero
+// down to 1/1,000 of it. Ridge: from 1,000 down to 0.001 (with standardised
+// covariates the ridge penalty has no unit, so the grid must not depend on the
+// unit of Y). Among equal errors the larger penalty wins. A leave-one-out fit
+// keeps the standardisation.
+function penSums(X, y) {
+  const n = y.length, p = X.length, q = p + 1, mu = [], sd = [], Z = [new Float64Array(n).fill(1)];
+  for (let k = 0; k < p; k++) { let s = 0; for (let i = 0; i < n; i++) s += X[k][i]; const m = s / n; let v = 0; for (let i = 0; i < n; i++) v += (X[k][i] - m) * (X[k][i] - m);
+    const d = Math.sqrt(v / n); mu.push(m); sd.push(d > 0 ? d : 1); Z.push(Float64Array.from(X[k], x => (d > 0 ? (x - m) / d : 0))); }
+  const G = new Float64Array(q * q), c = new Float64Array(q);
+  for (let a = 0; a < q; a++) { for (let b = a; b < q; b++) { let s = 0; for (let i = 0; i < n; i++) s += Z[a][i] * Z[b][i]; G[a * q + b] = G[b * q + a] = s; }
+    let s = 0; for (let i = 0; i < n; i++) s += Z[a][i] * y[i]; c[a] = s; }
+  let mx = 0; const ybar = c[0] / n;
+  for (let a = 1; a < q; a++) { let s = 0; for (let i = 0; i < n; i++) s += Z[a][i] * (y[i] - ybar); mx = Math.max(mx, Math.abs(s) / n); }
+  let vy = 0; for (let i = 0; i < n; i++) vy += (y[i] - ybar) * (y[i] - ybar);
+  return { n, p, q, mu, sd, Z, G, c, mx, ysd: Math.sqrt(vy / n) };
+}
+function penGrid(mx, alpha, nlam) { const ridge = alpha < 1e-3, top = ridge ? 1000 : mx / alpha, lo = ridge ? 1e-3 : mx * 1e-3, g = [];
+  for (let l = 0; l < nlam; l++) g.push(top > 0 ? top * Math.pow(lo / top, l / (nlam - 1)) : 0); return g; }
+// coordinate descent for one lambda on the sums of nn patients, started from b (changed in place)
+function penCd(G, c, q, nn, lam, alpha, b, tol) {
+  for (let it = 0; it < 5000; it++) { let ch = 0;
+    for (let a = 0; a < q; a++) { let r = c[a]; for (let k = 0; k < q; k++) if (k !== a) r -= G[a * q + k] * b[k]; r /= nn;
+      let v; if (a === 0) v = r / (G[0] / nn);
+      else { const s = Math.abs(r) - lam * alpha; v = s > 0 ? (r > 0 ? s : -s) / (G[a * q + a] / nn + lam * (1 - alpha)) : 0; }
+      ch = Math.max(ch, Math.abs(v - b[a])); b[a] = v; }
+    if (ch < (tol || 1e-11)) break; }
+  return b;
+}
+function fitPen(X, y, alpha, nlam) {
+  const S0 = penSums(X, y), n = S0.n, p = S0.p, q = S0.q, Z = S0.Z, G = S0.G, c = S0.c, grid = penGrid(S0.mx, alpha, nlam), err = new Float64Array(nlam);
+  const Gi = new Float64Array(q * q), ci = new Float64Array(q), zi = new Float64Array(q), tol = 1e-11 * (S0.ysd > 0 ? S0.ysd : 1);   // tolerance in units of Y
+  for (let i = 0; i < n; i++) {
+    for (let a = 0; a < q; a++) zi[a] = Z[a][i];
+    for (let a = 0; a < q; a++) { ci[a] = c[a] - zi[a] * y[i]; for (let b = 0; b < q; b++) Gi[a * q + b] = G[a * q + b] - zi[a] * zi[b]; }
+    const b = new Float64Array(q);
+    for (let l = 0; l < nlam; l++) { penCd(Gi, ci, q, n - 1, grid[l], alpha, b, tol); let pr = 0; for (let a = 0; a < q; a++) pr += b[a] * zi[a]; err[l] += (y[i] - pr) * (y[i] - pr); } }
+  let best = 0; for (let l = 1; l < nlam; l++) if (err[l] < err[best]) best = l;
+  const b = new Float64Array(q); for (let l = 0; l <= best; l++) penCd(G, c, q, n, grid[l], alpha, b, tol);
+  const beta = []; let b0 = b[0], nz = 0; for (let k = 0; k < p; k++) { const v = b[k + 1] / S0.sd[k]; beta.push(v); b0 -= v * S0.mu[k]; if (v !== 0) nz++; }
+  return { b0, beta, lambda: grid[best], best, nz, grid, looErr: Array.from(err, v => v / n), bstd: Array.from(b) };
+}
+
+// Train one twin. X = input columns (the covariates, then the arm indicator for
+// an arm-aware twin), pc = number of covariates. L = { type, prm, rngFor }.
+// Returns predict(Xt, nt); for SBML also the tuned weights r.
+function trainTwin(L, X, y, pc, tag) {
+  const type = (L && L.type) || 'sbml', prm = (L && L.prm) || TWIN_DEFAULTS();
+  if (type === 'sbml') { const o = prm.sbml; let Xs = X, tf = null;
+    if (o.std) { const mu = [], sd = [];           // optional: covariates (not the arm indicator) on the SD scale of the training patients
+      for (let k = 0; k < pc; k++) { mu.push(mean(X[k])); const v = variance(X[k]); sd.push(v > 0 ? Math.sqrt(v) : 1); }
+      tf = A => A.map((col, k) => (k < pc ? Float64Array.from(col, x => (x - mu[k]) / sd[k]) : col)); Xs = tf(X); }
+    const r = fitSbml(Xs, y, o);
+    return { r, flat: r.slice(0, pc).every(v => v < 2 * o.lo), predict: (Xt, nt) => predictSbml(Xs, y, r, tf ? tf(Xt) : Xt, nt) }; }
+  if (type === 'ridge' || type === 'lasso') { const f = fitPen(X, y, type === 'lasso' ? 1 : 0, prm.pen.nlambda);
+    return { r: null, flat: f.beta.slice(0, pc).every(v => v === 0), lambda: f.lambda, nz: f.nz,
+      predict: (Xt, nt) => { const out = new Float64Array(nt).fill(f.b0);
+        for (let k = 0; k < f.beta.length; k++) if (f.beta[k] !== 0) for (let i = 0; i < nt; i++) out[i] += f.beta[k] * Xt[k][i]; return out; } }; }
+  const rng = L.rngFor ? L.rngFor(tag) : makeRng(1, 0, hashStr(String(tag)), 0x7f4a7c15);
+  if (type === 'rf') return { r: null, flat: null, predict: fitForest(X, y, prm.rf, rng) };
+  if (type === 'gbm') return { r: null, flat: null, predict: fitBoost(X, y, prm.gbm, rng) };
+  throw new Error('unknown learner ' + type);
+}
+
+// ---------------------------------------------------------------------------
+// 6. TWINS AND FOLDS
+// ---------------------------------------------------------------------------
+// A twin is described by where its training patients come from:
+//   p2    'none' | 'c' (Phase 2 controls) | 'ct' (Phase 2 both arms)
+//   p3    'none' | 'oof' (cross-fitted: Phase 3 patients outside the fold)
+//         Phase 3 patients train a twin only by cross-fitting. A twin trained on the
+//         patients it scores is not offered (removed 2026-11-20) and is refused.
+//   arms3 'c' | 'ct'   which Phase 3 arms are used for training
+// If any treated patient is used, the arm indicator T is one more input of the
+// learner and every patient is scored at T = 0 ("arm-aware" twin).
+// L = { type, prm, rngFor } chooses the learner (default: SBML with the
+// settings of the first PREDCOVA paper).
+// A twin is counted as "flat" when its score is (almost) one constant:
+//   SBML: every covariate weight below twice the lower bound (0.002 by default)
+//   lasso: every covariate coefficient is zero (ridge coefficients are never exactly zero)
+//   forest / boosting: the scores of the scored patients do not vary
+const R_FLAT = 2e-3;
+function twinScores(tw, p3, p2, fold, K, p, L) {
+  const type = (L && L.type) || 'sbml';
+  const arm = tw.p2 === 'ct' || (tw.p3 !== 'none' && tw.arms3 === 'ct');
+  const rows2 = [];
+  if (tw.p2 !== 'none' && p2) for (let i = 0; i < p2.n; i++) if (tw.p2 === 'ct' || p2.t[i] === 0) rows2.push(i);
+  if (tw.p2 !== 'none' && !rows2.length) throw new Error('this method uses Phase 2 patients and there are none');
+  const use3 = i => tw.arms3 === 'ct' || p3.t[i] === 0;
+  const h = new Float64Array(p3.n), rsum = new Array(p + (arm ? 1 : 0)).fill(0);
+  let nfit = 0, nflat = 0, ntrain = 0, lam = 0, nz = 0;
+  const fitAndScore = (rows3, idx, tag) => {
+    const m = rows2.length + rows3.length;
+    if (m < 3) throw new Error('a twin has fewer than 3 training patients');
+    const X = [], y = new Float64Array(m);
+    for (let k = 0; k < p; k++) { const c = new Float64Array(m); let q = 0;
+      for (const i of rows2) c[q++] = p2.X[k][i]; for (const i of rows3) c[q++] = p3.X[k][i]; X.push(c); }
+    { let q = 0; for (const i of rows2) y[q++] = p2.y[i]; for (const i of rows3) y[q++] = p3.y[i]; }
+    if (arm) { const c = new Float64Array(m); let q = 0;
+      for (const i of rows2) c[q++] = p2.t[i]; for (const i of rows3) c[q++] = p3.t[i]; X.push(c); }
+    const fit = trainTwin(L, X, y, p, tag);
+    const Xt = []; for (let k = 0; k < p; k++) { const c = new Float64Array(idx.length); idx.forEach((i, a) => { c[a] = p3.X[k][i]; }); Xt.push(c); }
+    if (arm) Xt.push(new Float64Array(idx.length));  // scored as a control: T = 0
+    const pred = fit.predict(Xt, idx.length);
+    let lo = Infinity, hi = -Infinity;
+    idx.forEach((i, a) => { if (!isFinite(pred[a])) throw new Error('a twin gave a score that is not a number'); h[i] = pred[a]; if (pred[a] < lo) lo = pred[a]; if (pred[a] > hi) hi = pred[a]; });
+    if (fit.r) fit.r.forEach((v, j) => { rsum[j] += v; });
+    if (fit.lambda != null) { lam += fit.lambda; nz += fit.nz; }
+    let flat = fit.flat;
+    if (flat == null) { let ylo = Infinity, yhi = -Infinity; for (let q = 0; q < m; q++) { if (y[q] < ylo) ylo = y[q]; if (y[q] > yhi) yhi = y[q]; } flat = hi - lo <= 1e-9 * (yhi - ylo); }
+    nfit++; ntrain += m; if (flat) nflat++;
+  };
+  const all = Array.from({ length: p3.n }, (_, i) => i);
+  if (tw.p3 === 'oof') {
+    for (let k = 1; k <= K; k++) fitAndScore(all.filter(i => fold[i] !== k && use3(i)), all.filter(i => fold[i] === k), 'fold' + k);
+  } else if (tw.p3 === 'none') fitAndScore([], all, 'all');
+  else throw new Error('Phase 3 patients can train a twin only by cross-fitting');
+  const pen = type === 'ridge' || type === 'lasso';
+  return { h, r: type === 'sbml' ? rsum.map(v => v / nfit) : [], flat: nflat / nfit, ntrain: ntrain / nfit, arm, learner: type,
+    lambda: pen ? lam / nfit : null, nz: pen ? nz / nfit : null };
+}
+
+// Random folds 1..K. byArm = true: split separately within each arm, so every
+// fold has the same treated share (Lu et al. 2025). Fold sizes differ by at most 1.
+function makeFolds(t, K, byArm, rng) {
+  const fold = new Int32Array(t.length);
+  const groups = byArm ? [0, 1].map(a => { const ix = []; for (let i = 0; i < t.length; i++) if (t[i] === a) ix.push(i); return ix; })
+    : [Array.from({ length: t.length }, (_, i) => i)];
+  for (const ix of groups) { const lab = ix.map((_, j) => (j % K) + 1); rng.shuffle(lab); ix.forEach((i, j) => { fold[i] = lab[j]; }); }
+  return fold;
+}
+
+// ---------------------------------------------------------------------------
+// 7. ESTIMATORS
+// ---------------------------------------------------------------------------
+// Least squares by Householder QR. A column whose remaining length falls below
+// 1e-7 of its original length is dropped (the same rule as R's lm), so a twin
+// score that is almost constant does not break the fit.
+function lm(cols, y) {
+  const n = y.length, p = cols.length, A = cols.map(c => Float64Array.from(c));
+  const V = [], kept = [], Rc = [], pos = new Array(p).fill(-1);
+  let r = 0;
+  for (let j = 0; j < p; j++) {
+    const a = A[j]; let n0 = 0; for (let i = 0; i < n; i++) n0 += a[i] * a[i]; n0 = Math.sqrt(n0);
+    for (let q = 0; q < V.length; q++) { const v = V[q]; let d = 0; for (let i = q; i < n; i++) d += v[i] * a[i]; d *= 2; for (let i = q; i < n; i++) a[i] -= d * v[i]; }
+    let nr = 0; for (let i = r; i < n; i++) nr += a[i] * a[i]; nr = Math.sqrt(nr);
+    if (r >= n || n0 === 0 || nr < 1e-7 * n0) continue;          // dropped (aliased)
+    const v = new Float64Array(n), alpha = a[r] >= 0 ? -nr : nr;
+    for (let i = r; i < n; i++) v[i] = a[i]; v[r] -= alpha;
+    let vn = 0; for (let i = r; i < n; i++) vn += v[i] * v[i]; vn = Math.sqrt(vn); for (let i = r; i < n; i++) v[i] /= vn;
+    a[r] = alpha; V.push(v); pos[j] = r; kept.push(j); Rc.push(a.slice(0, r + 1)); r++;
+  }
+  const qty = Float64Array.from(y);
+  for (let q = 0; q < r; q++) { const v = V[q]; let d = 0; for (let i = q; i < n; i++) d += v[i] * qty[i]; d *= 2; for (let i = q; i < n; i++) qty[i] -= d * v[i]; }
+  const b = new Float64Array(r);                     // back substitution R b = Q'y
+  for (let i = r - 1; i >= 0; i--) { let s = qty[i]; for (let k = i + 1; k < r; k++) s -= Rc[k][i] * b[k]; b[i] = s / Rc[i][i]; }
+  const coef = new Array(p).fill(NaN); kept.forEach((j, a) => { coef[j] = b[a]; });
+  const resid = Float64Array.from(y);
+  kept.forEach((j, a) => { const c = cols[j], ba = b[a]; for (let i = 0; i < n; i++) resid[i] -= ba * c[i]; });
+  // covariance matrix of the kept coefficients (r x r, row-major)
+  //   classical: s^2 (X'X)^-1          HC3: (X'X)^-1 X' diag(e_i^2 / (1 - h_ii)^2) X (X'X)^-1
+  const vc = (type) => {
+    const Ri = new Float64Array(r * r);              // inverse of the upper-triangular R
+    for (let c = 0; c < r; c++) { Ri[c * r + c] = 1 / Rc[c][c];
+      for (let i = c - 1; i >= 0; i--) { let s = 0; for (let k = i + 1; k <= c; k++) s += Rc[k][i] * Ri[k * r + c]; Ri[i * r + c] = -s / Rc[i][i]; } }
+    const G = new Float64Array(r * r);               // (X'X)^-1 = Ri Ri'
+    for (let a = 0; a < r; a++) for (let c = 0; c < r; c++) { let s = 0; for (let k = Math.max(a, c); k < r; k++) s += Ri[a * r + k] * Ri[c * r + k]; G[a * r + c] = s; }
+    if (type !== 'HC3') { let rss = 0; for (let i = 0; i < n; i++) rss += resid[i] * resid[i]; const s2 = rss / (n - r); return G.map(v => v * s2); }
+    const M = new Float64Array(r * r), xi = new Float64Array(r), gx = new Float64Array(r);
+    for (let i = 0; i < n; i++) {
+      for (let a = 0; a < r; a++) xi[a] = cols[kept[a]][i];
+      let hii = 0; for (let a = 0; a < r; a++) { let s = 0; for (let c = 0; c < r; c++) s += G[a * r + c] * xi[c]; gx[a] = s; hii += xi[a] * s; }
+      const w = resid[i] * resid[i] / ((1 - hii) * (1 - hii));
+      for (let a = 0; a < r; a++) for (let c = 0; c < r; c++) M[a * r + c] += w * xi[a] * xi[c];
+    }
+    const GM = new Float64Array(r * r), out = new Float64Array(r * r);
+    for (let a = 0; a < r; a++) for (let c = 0; c < r; c++) { let s = 0; for (let k = 0; k < r; k++) s += G[a * r + k] * M[k * r + c]; GM[a * r + c] = s; }
+    for (let a = 0; a < r; a++) for (let c = 0; c < r; c++) { let s = 0; for (let k = 0; k < r; k++) s += GM[a * r + k] * G[k * r + c]; out[a * r + c] = s; }
+    return out;
+  };
+  return { coef, pos, kept, rank: r, df: n - r, resid, n, vc };
+}
+const mean = a => { let s = 0; for (let i = 0; i < a.length; i++) s += a[i]; return s / a.length; };
+const variance = a => { const m = mean(a); let s = 0; for (let i = 0; i < a.length; i++) s += (a[i] - m) * (a[i] - m); return s / (a.length - 1); };
+function corr(a, b) { const ma = mean(a), mb = mean(b); let sab = 0, saa = 0, sbb = 0;
+  for (let i = 0; i < a.length; i++) { sab += (a[i] - ma) * (b[i] - mb); saa += (a[i] - ma) * (a[i] - ma); sbb += (b[i] - mb) * (b[i] - mb); }
+  return sab / Math.sqrt(saa * sbb); }
+const ones = n => new Float64Array(n).fill(1);
+
+// Regression  Y ~ 1 + T + extra columns.  Estimate = coefficient of T, t test.
+//   ANOVA: no extra column      ANCOVA: the covariates      PROCOVA: the twin score
+function estLinear(d, extra, seType) {
+  const fit = lm([ones(d.n), Float64Array.from(d.t)].concat(extra), d.y), q = fit.pos[1];
+  if (q < 0) throw new Error('the treatment column was dropped');
+  const se = Math.sqrt(fit.vc(seType)[q * fit.rank + q]), est = fit.coef[1];
+  return { est, se, p: pt2(est / se, fit.df), df: fit.df };
+}
+// PREDCOVA:  Y ~ 1 + h(x) + T * z(x),  z(x) = (1, z_1(x), ..., z_q(x)).
+//   The terms z_1 .. z_q are pre-specified functions of the covariates, typed
+//   by the user (any finite list is admissible; the first element is always 1).
+//   ATE estimate  = mean over patients of z(x_i)' gamma
+//   variance      = zbar' HC3(gamma) zbar + var(z(x_i)' gamma) / n ;  z test
+// h = null gives the same regression without a twin (used for benchmarks).
+// zCols: the columns of z(x). z = list of compiled terms. The older call
+// (z = list of covariate numbers, degree) means the powers 1..degree.
+function zCols(d, z, degree) {
+  const n = d.n, Z = [ones(n)];
+  if (z && z.length && typeof z[0] === 'number') {
+    for (const ix of z) for (let e = 1; e <= degree; e++) { const c = new Float64Array(n), x = d.X[ix]; for (let i = 0; i < n; i++) c[i] = Math.pow(x[i], e); Z.push(c); }
+    return Z; }
+  const q = z ? z.length : 0, row = new Array(d.X.length), cols = []; for (let j = 0; j < q; j++) cols.push(new Float64Array(n));
+  for (let i = 0; i < n; i++) { for (let k = 0; k < row.length; k++) row[k] = d.X[k][i]; for (let j = 0; j < q; j++) cols[j][i] = z[j](row); }
+  return Z.concat(cols);
+}
+function predFit(d, h, z, degree) {
+  const n = d.n, Z = zCols(d, z, degree);
+  const cols = [ones(n)]; if (h) cols.push(h); const off = cols.length;
+  for (const z of Z) { const c = new Float64Array(n); for (let i = 0; i < n; i++) c[i] = d.t[i] * z[i]; cols.push(c); }
+  const fit = lm(cols, d.y), act = [];
+  for (let j = 0; j < Z.length; j++) if (fit.pos[off + j] >= 0) act.push(j);
+  const tau = new Float64Array(n);                   // fitted individual effects z_i' gamma
+  for (const j of act) { const gk = fit.coef[off + j], z = Z[j]; for (let i = 0; i < n; i++) tau[i] += z[i] * gk; }
+  return { fit, Z, act, off, tau };
+}
+function estPredcova(d, h, z, degree) {
+  const { fit, Z, act, off, tau } = predFit(d, h, z, degree), n = d.n, V = fit.vc('HC3'), r = fit.rank;
+  const zbar = act.map(j => mean(Z[j])); let vcoef = 0;
+  for (let a = 0; a < act.length; a++) for (let b = 0; b < act.length; b++) vcoef += zbar[a] * zbar[b] * V[fit.pos[off + act[a]] * r + fit.pos[off + act[b]]];
+  const vtau = variance(tau) / n, est = mean(tau), se = Math.sqrt(vcoef + vtau);
+  return { est, se, p: 2 * pnormBoth(Math.abs(est / se))[1], df: NaN, seCoef: Math.sqrt(vcoef), seTau: Math.sqrt(vtau) };
+}
+// Oracle: efficient influence function with the TRUE f and g.
+//   psi_i = g(x_i) + T_i e_i / pi - (1 - T_i) e_i / (1 - pi),  e_i = Y_i - f(x_i) - g(x_i) T_i
+function estOracle(d) {
+  if (!d.f || !d.g) throw new Error('the oracle needs the true f and g (simulated data only)');
+  const n = d.n; let n1 = 0; for (let i = 0; i < n; i++) n1 += d.t[i];
+  const pi = n1 / n, psi = new Float64Array(n);
+  for (let i = 0; i < n; i++) { const e = d.y[i] - d.f[i] - d.g[i] * d.t[i]; psi[i] = d.g[i] + (d.t[i] ? e / pi : -e / (1 - pi)); }
+  const est = mean(psi), se = Math.sqrt(variance(psi) / n);
+  return { est, se, p: 2 * pnormBoth(Math.abs(est / se))[1], df: NaN };
+}
+
+// Estimate with a cross-fitted twin, fold by fold.
+//   For fold k: fit the analysis model on the patients of fold k only, with
+//   their scores from the twin trained without fold k. Given the other folds
+//   that twin is a fixed function, so fold k is a small randomized trial with
+//   a pre-specified covariate and the theory of the first paper applies to it.
+//   Combined estimate  tau = sum_k (n_k / n) tau_k
+//   Combined variance  V   = sum_k (n_k / n)^2 V_k
+//   The variance sum is a first-order (large-sample) statement. Each fold
+//   estimate is centred at tau for any twin, but the folds are not independent:
+//   the twin of one fold is trained on the patients of the others. The fold
+//   estimates are uncorrelated to first order only if the twin settles to a
+//   fixed function as the training set grows. In small trials check the column
+//   "mean SE / true SD" of the simulation.
+//   Test: z for PREDCOVA; t with Satterthwaite degrees of freedom for PROCOVA,
+//   df = (sum_k a_k)^2 / sum_k (a_k^2 / df_k),  a_k = (n_k / n)^2 V_k.
+function subDs(d, idx) {
+  const o = { n: idx.length, t: Uint8Array.from(idx, i => d.t[i]), y: Float64Array.from(idx, i => d.y[i]), X: d.X.map(x => Float64Array.from(idx, i => x[i])) };
+  if (d.f) { o.f = Float64Array.from(idx, i => d.f[i]); o.g = Float64Array.from(idx, i => d.g[i]); }
+  return o;
+}
+function estByFold(d, h, fold, K, fit, useT) {
+  let est = 0, v = 0, vc = 0, vt = 0, dfd = 0;
+  for (let k = 1; k <= K; k++) {
+    const idx = []; for (let i = 0; i < d.n; i++) if (fold[i] === k) idx.push(i);
+    const q = fit(subDs(d, idx), Float64Array.from(idx, i => h[i])), w = idx.length / d.n;
+    if (!isFinite(q.est) || !isFinite(q.se)) throw new Error('fold ' + k + ' gave no estimate (too few patients for a separate regression)');
+    const a = w * w * q.se * q.se;
+    est += w * q.est; v += a; dfd += a * a / q.df;
+    if (q.seCoef != null) { vc += w * w * q.seCoef * q.seCoef; vt += w * w * q.seTau * q.seTau; }
+  }
+  const se = Math.sqrt(v), df = v * v / dfd, out = { est, se, df: useT ? df : NaN, p: useT ? pt2(est / se, df) : 2 * pnormBoth(Math.abs(est / se))[1] };
+  if (!useT) { out.seCoef = Math.sqrt(vc); out.seTau = Math.sqrt(vt); }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// 8. ONE REPETITION, SUMMARIES, BENCHMARKS
+// ---------------------------------------------------------------------------
+const twinKey = tw => tw.p2 + '|' + tw.p3 + '|' + (tw.p3 === 'none' ? '-' : tw.arms3);
+
+// Analyse one Phase 3 trial (p3) with an optional Phase 2 trial (p2) by every
+// method that is switched on.
+// opt = {K, z, seStd, sePro, p, twinPrm, rngFor}; z = compiled terms of z(x)
+// (older scripts give modIx and degree instead). Each method may name its
+// learner (m.learner); the default is SBML. Two methods with the same training
+// data and the same learner share one twin. Forest and boosting draw their
+// random numbers from opt.rngFor(tag), one stream per twin and fold, so a twin
+// does not depend on which other methods are switched on.
+function analyse(methods, p3, p2, fold, opt) {
+  const cache = {}, out = [], ctl = [];
+  for (let i = 0; i < p3.n; i++) if (p3.t[i] === 0) ctl.push(i);
+  const yc = ctl.map(i => p3.y[i]);
+  for (const m of methods) {
+    let res, tw = null;
+    try {
+      if (usesTwin(m)) { const type = m.learner && LEARNERS[m.learner] ? m.learner : 'sbml', key = twinKey(m.twin) + '|' + type;
+        if (cache[key] === undefined) { try { cache[key] = twinScores(m.twin, p3, p2, fold, opt.K, opt.p,
+          { type, prm: opt.twinPrm, rngFor: tag => (opt.rngFor ? opt.rngFor(key + '|' + tag) : makeRng(1, 0, hashStr(key + '|' + tag), 0x7f4a7c15)) }); } catch (e) { cache[key] = e; } }
+        if (cache[key] instanceof Error) throw cache[key];
+        tw = cache[key]; }
+      if (m.model === 'anova') res = estLinear(p3, [], opt.seStd);
+      else if (m.model === 'ancova') res = estLinear(p3, p3.X, opt.seStd);
+      else if (m.model === 'ancova2') res = estLinear(p3, p3.X.concat(p3.X.map(x => x.map(v => v * v))), opt.seStd);
+      else if (usesTwin(m)) {
+        const fit = m.model === 'procova' ? (d, h) => estLinear(d, [h], opt.sePro)
+          : (d, h) => (opt.z ? estPredcova(d, h, opt.z) : estPredcova(d, h, opt.modIx, opt.degree));
+        res = byFold(m) ? estByFold(p3, tw.h, fold, opt.K, fit, m.model === 'procova') : fit(p3, tw.h);
+      }
+      else if (m.model === 'oracle') res = estOracle(p3);
+      else throw new Error('unknown model ' + m.model);
+    } catch (e) { res = { est: NaN, se: NaN, p: NaN, df: NaN, err: e.message }; }
+    res.id = m.id; res.tw = tw;
+    // observable twin accuracy: correlation of score and outcome among Phase 3 controls
+    res.rho0 = tw ? corr(ctl.map(i => tw.h[i]), yc) : NaN;
+    res.flat = tw ? tw.flat : NaN;
+    out.push(res);
+  }
+  return out;
+}
+// Options of the analysis for repetition rep at sweep point sw. The random
+// numbers of forest and boosting come from streams of their own (never from
+// the stream that draws the data).
+const optOf = (C, rep, sw) => ({ K: C.S.K, z: C.z, modIx: C.modIx, degree: C.S.degree, seStd: C.S.seStd, sePro: C.S.sePro, p: C.p, twinPrm: C.twinPrm,
+  rngFor: tag => makeRng(((C.S.seed | 0) ^ 0x5bd1e995) >>> 0, (rep | 0) + 1000003 * ((sw | 0) + 1), hashStr(tag), 0x7f4a7c15) });
+
+// Data of one repetition. Order of the draws: Phase 3, Phase 2, folds. The
+// analysis never draws from this stream, so the data do not depend on the
+// methods chosen and are the same for every K.
+function simulateTrial(C, rep, sw) {
+  const S = C.S, rng = makeRng(S.seed, rep, sw || 0);
+  const p3 = drawData(C, S.n3c, S.n3t, rng);
+  const p2 = S.n2c + S.n2t > 0 ? drawData(C, S.n2c, S.n2t, rng) : null;
+  const fold = makeFolds(p3.t, S.K, S.foldByArm !== false, rng);
+  return { p3, p2, fold };
+}
+let lastKey = null, lastC = null;
+function runChunk(S, from, to, sw) {
+  const key = JSON.stringify(S); if (key !== lastKey) { lastC = compile(S); lastKey = key; }
+  const C = lastC, M = C.methods.length, R = to - from, t0 = Date.now();
+  const o = { from, to, est: new Float64Array(M * R), se: new Float64Array(M * R), p: new Float64Array(M * R),
+    rho: new Float64Array(M * R), flat: new Float64Array(M * R), err: null };
+  for (let rep = from; rep < to; rep++) {
+    const d = simulateTrial(C, rep, sw), res = analyse(C.methods, d.p3, d.p2, d.fold, optOf(C, rep, sw));
+    res.forEach((q, m) => { const ix = m * R + (rep - from); o.est[ix] = q.est; o.se[ix] = q.se; o.p[ix] = q.p; o.rho[ix] = q.rho0; o.flat[ix] = q.flat;
+      if (q.err && !o.err) o.err = q.id + ': ' + q.err; });
+  }
+  o.ms = Date.now() - t0; return o;
+}
+
+// Summary of R repetitions. raw.est etc. are M x R (method-major).
+//   target = true ATE (0 when there is no effect), N = Phase 3 size, ref = index of the reference method
+function summarise(raw, M, R, target, alpha, N, ref) {
+  const rows = [], hasRef = ref >= 0 && ref < M;
+  const one = (m) => { let k = 0, s = 0, ss = 0, sse = 0, rej = 0, cov = 0, srho = 0, krho = 0, sflat = 0, kflat = 0;
+    const rj = new Float64Array(R);
+    for (let i = 0; i < R; i++) { const e = raw.est[m * R + i], se = raw.se[m * R + i], p = raw.p[m * R + i];
+      if (!isFinite(e) || !isFinite(se)) { rj[i] = NaN; continue; }
+      k++; s += e; ss += e * e; sse += se; rj[i] = p < alpha ? 1 : 0; rej += rj[i];
+      if (Math.abs(e - target) <= 1.96 * se) cov++;
+      // a constant twin score has no correlation with the outcome (0 / 0) but must still be counted as flat
+      const rh = raw.rho[m * R + i], fl = raw.flat[m * R + i]; if (isFinite(rh)) { srho += rh; krho++; } if (isFinite(fl)) { sflat += fl; kflat++; } }
+    const mu = s / k, v = (ss - k * mu * mu) / (k - 1), pr = rej / k;
+    return { k, mean: mu, bias: mu - target, biasSE: Math.sqrt(v / k), variance: v, nVar: N * v, meanSE: sse / k, seRatio: (sse / k) / Math.sqrt(v),
+      rej: pr, rejSE: Math.sqrt(pr * (1 - pr) / k), cover: cov / k, rho: krho ? srho / krho : NaN, flat: kflat ? sflat / kflat : NaN, rj }; };
+  for (let m = 0; m < M; m++) rows.push(one(m));
+  // Paired comparison with the reference method, on the repetitions in which both gave an estimate.
+  rows.forEach((q, m) => {
+    let k = 0, s = 0, ss = 0, a = 0, aa = 0, b = 0, bb = 0, ab = 0;
+    if (hasRef) for (let i = 0; i < R; i++) { const d = q.rj[i] - rows[ref].rj[i]; if (!isFinite(d)) continue;
+      k++; s += d; ss += d * d; const x = raw.est[m * R + i], y = raw.est[ref * R + i]; a += x; aa += x * x; b += y; bb += y * y; ab += x * y; }
+    const md = s / k;
+    q.dRej = hasRef ? md : NaN; q.dRejSE = hasRef ? Math.sqrt(Math.max(0, (ss - k * md * md) / (k - 1)) / k) : NaN;
+    q.varRatio = hasRef ? (aa - a * a / k) / (bb - b * b / k) : NaN;
+    // Monte Carlo SE of the variance ratio. Both variances come from the same trials; for jointly
+    // normal estimates with correlation c, Var(log ratio) = 4 (1 - c^2) / (k - 1).
+    const cc = hasRef ? (ab - a * b / k) / Math.sqrt((aa - a * a / k) * (bb - b * b / k)) : NaN;
+    q.varRatioSE = hasRef && m !== ref ? q.varRatio * Math.sqrt(Math.max(0, 4 * (1 - cc * cc) / (k - 1))) : NaN; });
+  rows.forEach(q => { delete q.rj; });
+  return rows;
+}
+
+// Large-sample benchmarks from a population sample of size Npop (fixed seed).
+// Per-patient variance V means Var(estimate) ~ V / N for a Phase 3 trial of N.
+//   ANOVA, efficiency bound: closed forms.
+//   Regressions without interaction: V = E[u^2 | T=1] / pi + E[u^2 | T=0] / (1 - pi), u = population residual.
+//   PREDCOVA: V = Var(psi), psi = z'gamma - tau + (T / pi - (1 - T) / (1 - pi)) u  (influence function of the paper).
+function benchmarks(C, Npop) {
+  const S = C.S, N = Npop || 400000, rng = makeRng(20261116, 7, 7), pi = S.n3t / (S.n3c + S.n3t);
+  const d = drawData(C, N, 0, rng);                  // all drawn as controls, then T assigned
+  let s2 = 0; for (let i = 0; i < N; i++) { const e = d.y[i] - d.f[i]; s2 += e * e; } s2 /= N;
+  for (let i = 0; i < N; i++) { d.t[i] = rng.unif() < pi ? 1 : 0; d.y[i] += d.t[i] * d.g[i]; }
+  const tau = mean(d.g), varG = variance(d.g), varF = variance(d.f), fg = Float64Array.from(d.f, (v, i) => v + d.g[i]);
+  const rows = [{ name: 'ANOVA', V: (variance(fg) + s2) / pi + (varF + s2) / (1 - pi) }];
+  const linV = extra => { const fit = lm([ones(N), Float64Array.from(d.t)].concat(extra), d.y); let a1 = 0, n1 = 0, a0 = 0, n0 = 0;
+    for (let i = 0; i < N; i++) { const u2 = fit.resid[i] * fit.resid[i]; if (d.t[i]) { a1 += u2; n1++; } else { a0 += u2; n0++; } }
+    return a1 / n1 / pi + a0 / n0 / (1 - pi); };
+  rows.push({ name: 'ANCOVA', V: linV(d.X) });
+  rows.push({ name: 'PROCOVA, perfect twin (h = f)', V: linV([d.f]) });
+  const predV = h => { const q = predFit(d, h, C.z), psi = new Float64Array(N);
+    for (let i = 0; i < N; i++) psi[i] = q.tau[i] + (d.t[i] ? 1 / pi : -1 / (1 - pi)) * q.fit.resid[i];
+    return variance(psi); };
+  rows.push({ name: 'PREDCOVA, no twin', V: predV(null) });
+  rows.push({ name: 'PREDCOVA, perfect twin (h = f)', V: predV(d.f) });
+  rows.push({ name: 'Efficiency bound (oracle)', V: varG + s2 / pi + s2 / (1 - pi) });
+  const Ntrial = S.n3c + S.n3t, zc = qnorm(1 - S.alpha / 2);
+  rows.forEach(r => { r.power = tau === 0 ? S.alpha : pnormBoth(Math.abs(tau) * Math.sqrt(Ntrial / r.V) - zc)[0] + pnormBoth(-Math.abs(tau) * Math.sqrt(Ntrial / r.V) - zc)[0]; });
+  return { tau, tauSE: Math.sqrt(varG / N), varF, varG, s2, r2f: varF / (varF + s2), pi, Npop: N, rows };
+}
+
+// ---------------------------------------------------------------------------
+// 9. SELF-TESTS
+// ---------------------------------------------------------------------------
+// Fixed data set, same expressions as make_reference.R.
+function toyData() {
+  const n = 40, x1 = new Float64Array(n), x2 = new Float64Array(n), t = new Uint8Array(n), y = new Float64Array(n);
+  for (let k = 0; k < n; k++) { const i = k + 1, a = i * 0.618034, b = i * 0.414214;
+    x1[k] = (a - Math.floor(a)) * 2.5; x2[k] = (b - Math.floor(b)) * 2; t[k] = i % 2;
+    y[k] = Math.sin(x1[k]) + 0.5 * x2[k] + t[k] * (0.7 * Math.cos(x1[k])) + 0.3 * Math.sin(7 * i); }
+  return { n, t, X: [x1, x2], y };
+}
+// ref = numbers computed by R (make_reference.R); may be null.
+function selfTest(ref) {
+  const out = [], add = (name, ok, detail) => out.push({ name, ok: !!ok, detail: detail || '' });
+  const close = (a, b, tol) => Math.abs(a - b) <= tol * Math.max(1, Math.abs(b));
+  const maxDiff = (a, b) => { let m = 0; for (let i = 0; i < a.length; i++) m = Math.max(m, Math.abs(a[i] - b[i])); return m; };
+  const fmt = v => (+v).toExponential(2);
+  // --- internal consistency (no R numbers needed) ---
+  add('normal distribution: P(Z <= 1.96)', close(pnormBoth(1.96)[0], 0.9750021048517795, 1e-13), fmt(pnormBoth(1.96)[0] - 0.9750021048517795));
+  add('normal tail: series and continued fraction agree at 3', close(pnormBoth(3 - 1e-12)[1], pnormBoth(3 + 1e-12)[1], 1e-9));
+  add('t distribution with 1 df: P(|t| > 1) = 0.5', close(pt2(1, 1), 0.5, 1e-13), fmt(pt2(1, 1) - 0.5));
+  { const f = compileExpr('4.1*sin(abs(a)) + 1.4*(abs(b) > 2.5) - a^2/2 + -b^2 + max(a, b)*expit(0) + 2^3^2/512', ['a', 'b']);
+    const a = -1.3, b = 2.7, want = 4.1 * Math.sin(1.3) + 1.4 - a * a / 2 - b * b + b * 0.5 + 1;
+    add('formula parser: precedence, powers, comparisons, functions', close(f([a, b]), want, 1e-14), fmt(f([a, b]) - want)); }
+  { let bad = false; try { compileExpr('sin(x) + y', ['x']); } catch (e) { bad = true; } add('formula parser: unknown names are rejected', bad);
+    let bad2 = false; try { compileExpr('log(x, 10)', ['x']); } catch (e) { bad2 = true; }
+    add('formula parser: a wrong number of arguments is rejected; !a > b means !(a > b)', bad2 && compileExpr('!x > 1', ['x'])([0]) === 1 && compileExpr('max(x, 2, 3) + 2*!x', ['x'])([0]) === 5); }
+  { const rng = makeRng(1, 2, 3); let s = 0, ss = 0, su = 0; const n = 200000;
+    for (let i = 0; i < n; i++) { const z = rng.norm(); s += z; ss += z * z; su += rng.unif(); }
+    add('random numbers: normal mean 0, variance 1, uniform mean 0.5', Math.abs(s / n) < 0.01 && Math.abs(ss / n - 1) < 0.015 && Math.abs(su / n - 0.5) < 0.003,
+      'mean ' + (s / n).toFixed(4) + ', var ' + (ss / n).toFixed(4));
+    const a = makeRng(5, 1, 0).unif(), b = makeRng(5, 1, 0).unif(), c = makeRng(5, 2, 0).unif();
+    add('random numbers: same stream repeats, other stream differs', a === b && a !== c); }
+  const d = toyData(), ctl = []; for (let i = 0; i < d.n; i++) if (d.t[i] === 0) ctl.push(i);
+  const sub = (col, ix) => Float64Array.from(ix, i => col[i]);
+  const Xc1 = [sub(d.X[0], ctl)], Xc2 = [sub(d.X[0], ctl), sub(d.X[1], ctl)], yc = sub(d.y, ctl);
+  const r1 = fitSbml(Xc1, yc), h1 = predictSbml(Xc1, yc, r1, [d.X[0]], d.n);
+  const r2 = fitSbml(Xc2, yc), h2 = predictSbml(Xc2, yc, r2, d.X, d.n);
+  { const l0 = sbmlLooLoss(Xc1, yc, r1); let ok = true;
+    for (const q of [0.5, 0.8, 1.25, 2]) if (sbmlLooLoss(Xc1, yc, [r1[0] * q]) < l0 - 1e-12) ok = false;
+    add('SBML: tuned weight has a lower leave-one-out error than nearby weights', ok, 'r = ' + r1[0].toFixed(5)); }
+  { // normal equations solved by Gauss elimination, as a check of the QR code
+    const cols = [ones(d.n), Float64Array.from(d.t), d.X[0], d.X[1]], p = 4, A = [];
+    for (let a = 0; a < p; a++) { A.push([]); for (let b = 0; b <= p; b++) { let s = 0; const cb = b < p ? cols[b] : d.y; for (let i = 0; i < d.n; i++) s += cols[a][i] * cb[i]; A[a].push(s); } }
+    for (let a = 0; a < p; a++) { for (let b = a + 1; b < p; b++) { const f = A[b][a] / A[a][a]; for (let c = a; c <= p; c++) A[b][c] -= f * A[a][c]; } }
+    const bb = new Array(p); for (let a = p - 1; a >= 0; a--) { let s = A[a][p]; for (let c = a + 1; c < p; c++) s -= A[a][c] * bb[c]; bb[a] = s / A[a][a]; }
+    const fit = lm(cols, d.y); add('least squares: QR agrees with the normal equations', maxDiff(fit.coef, bb) < 1e-10, fmt(maxDiff(fit.coef, bb))); }
+  { // leakage: changing a patient's own outcome must not change that patient's cross-fitted score
+    const rng = makeRng(11, 0, 0), fold = makeFolds(d.t, 2, true, rng), tw = { p2: 'none', p3: 'oof', arms3: 'c' };
+    // patient 1 is a control, patient 0 is treated; one outcome is changed at a time
+    const bump = j => { const y2 = Float64Array.from(d.y); y2[j] += 5; return { n: d.n, t: d.t, X: d.X, y: y2 }; };
+    const d2 = bump(1), sc = (spec, dd) => twinScores(spec, dd, null, fold, 2, 2).h;
+    const a = sc(tw, d), b = sc(tw, d2);
+    add('cross-fitting (controls): a patient\'s own outcome does not enter that patient\'s score', a[1] === b[1], 'score change ' + fmt(a[1] - b[1]));
+    const tw2 = { p2: 'none', p3: 'oof', arms3: 'ct' }, a2 = sc(tw2, d), b2 = sc(tw2, bump(0));
+    add('cross-fitting (both arms): a treated patient\'s own outcome does not enter that patient\'s score', a2[0] === b2[0], 'score change ' + fmt(a2[0] - b2[0]));
+    let moved = 0; for (let i = 0; i < d.n; i++) if (a[i] !== b[i]) moved++;
+    add('cross-fitting: the changed outcome does move the scores of the other fold', moved > 0, moved + ' scores moved');
+    const cnt = [0, 0, 0, 0]; for (let i = 0; i < d.n; i++) cnt[(fold[i] - 1) * 2 + d.t[i]]++;
+    add('folds: equal split within each arm', cnt.every(v => v === 10), cnt.join(' / '));
+    let refused = false; try { sc({ p2: 'none', p3: 'all', arms3: 'c' }, d); } catch (e) { refused = true; }
+    add('a twin trained on the Phase 3 patients it scores (not cross-fitted) is refused', refused); }
+  { // per-fold estimation = the fold regressions run by hand, then averaged
+    const fold = makeFolds(d.t, 2, true, makeRng(3, 0, 0)), o = { K: 2, modIx: [0], degree: 2, seStd: 'classical', sePro: 'HC3', p: 2 };
+    const mk = est => ({ id: 'a', model: 'predcova', twin: { p2: 'none', p3: 'oof', arms3: 'c' }, est });
+    const a = analyse([mk('fold')], d, null, fold, o)[0], b = analyse([mk('single')], d, null, fold, o)[0];
+    let e = 0, v = 0;
+    for (let k = 1; k <= 2; k++) { const idx = []; for (let i = 0; i < d.n; i++) if (fold[i] === k) idx.push(i);
+      const q = estPredcova(subDs(d, idx), Float64Array.from(idx, i => a.tw.h[i]), [0], 2); e += q.est / 2; v += q.se * q.se / 4; }
+    add('fold-by-fold estimate = average of the K separate regressions, variance = sum of fold variances / K^2',
+      close(a.est, e, 1e-12) && close(a.se, Math.sqrt(v), 1e-12) && a.est !== b.est, 'by fold ' + a.est.toFixed(4) + ', one regression ' + b.est.toFixed(4)); }
+  { // correlation matrix (Gaussian copula): normal, normal, uniform, and one uncorrelated covariate
+    const S = { covs: [{ name: 'a', dist: 'norm', a: 0, b: 1 }, { name: 'b', dist: 'norm', a: 0, b: 2 }, { name: 'c', dist: 'unif', a: 0, b: 1 }, { name: 'e', dist: 'norm', a: 0, b: 1 }],
+      corr: [[1, 0.5, 0.2, 0], [0.5, 1, -0.3, 0], [0.2, -0.3, 1, 0], [0, 0, 0, 1]], effect: true };
+    const dd = drawData({ S, p: 4, copula: copulaOf(S, 4), f: () => 0, g: () => 0, sd: () => 1 }, 40000, 0, makeRng(9, 9, 9));
+    const c1 = corr(dd.X[0], dd.X[1]), c2 = corr(dd.X[1], dd.X[2]), c3 = corr(dd.X[0], dd.X[3]), want2 = -0.3 * Math.sqrt(3 / Math.PI);
+    add('correlation matrix: simulated covariates have the requested correlations', Math.abs(c1 - 0.5) < 0.02 && Math.abs(c2 - want2) < 0.02 && Math.abs(c3) < 0.02,
+      c1.toFixed(3) + ' (0.5), ' + c2.toFixed(3) + ' (' + want2.toFixed(3) + ' for a normal and a uniform covariate), ' + c3.toFixed(3) + ' (0)');
+    let bad = false; try { copulaOf({ covs: S.covs.slice(0, 3), corr: [[1, 0.9, -0.9], [0.9, 1, 0.9], [-0.9, 0.9, 1]] }, 3); } catch (e) { bad = true; }
+    add('correlation matrix: an impossible matrix is rejected', bad); }
+  { // free-form z(x)
+    const nm = ['x1', 'x2'], a = estPredcova(d, h1, [compileExpr('x1', nm), compileExpr('x1^2', nm)]), b = estPredcova(d, h1, [0], 2);
+    const zz = zCols(d, [compileExpr('x1*x2', nm), compileExpr('log(x2 + 1)', nm)]); let dm = 0;
+    for (let i = 0; i < d.n; i++) dm = Math.max(dm, Math.abs(zz[1][i] - d.X[0][i] * d.X[1][i]), Math.abs(zz[2][i] - Math.log(d.X[1][i] + 1)));
+    add('z(x): the typed terms "x1, x1^2" give the PREDCOVA result of the powers 1 and 2; terms in several covariates are evaluated correctly',
+      a.est === b.est && a.se === b.se && dm === 0 && zz.length === 3); }
+  { // trees, boosting, forest
+    const x = Float64Array.from({ length: 20 }, (_, i) => i), yy = Float64Array.from(x, v => (v >= 12 ? 3 : 1)), rows = Array.from(x, (_, i) => i);
+    const tr = growTree([x], yy, rows, { maxSplits: 1, minSplit: 2, minLeaf: 1, mtry: 1 }, null);
+    add('tree: one split of a step function is found exactly', tr.feat[0] === 0 && tr.thr[0] === 11.5 && tr.val[tr.lt[0]] === 1 && tr.val[tr.rt[0]] === 3);
+    add('boosting: one tree with learning rate 1 reproduces the step function', maxDiff(fitBoost([x], yy, { trees: 1, depth: 1, rate: 1, bag: 1, minNode: 1 }, null)([x], 20), yy) < 1e-12);
+    const mse = f => { const pr = f(d.X, d.n); let s = 0; for (let i = 0; i < d.n; i++) s += (pr[i] - d.y[i]) * (pr[i] - d.y[i]); return s / d.n; };
+    const go = { trees: 1, depth: 3, rate: 0.1, bag: 0.5, minNode: 5 }, m1 = mse(fitBoost(d.X, d.y, go, makeRng(4, 0, 0))), m100 = mse(fitBoost(d.X, d.y, Object.assign({}, go, { trees: 100 }), makeRng(4, 0, 0)));
+    add('boosting: 100 trees fit the training data better than 1 tree', m100 < m1, fmt(m1) + ' -> ' + fmt(m100));
+    const fo = { trees: 50, mtry: 0, minNode: 5 }, fa = fitForest(d.X, d.y, fo, makeRng(4, 1, 0))(d.X, d.n), fb = fitForest(d.X, d.y, fo, makeRng(4, 1, 0))(d.X, d.n);
+    let lo = Infinity, hi = -Infinity; for (let i = 0; i < d.n; i++) { lo = Math.min(lo, d.y[i]); hi = Math.max(hi, d.y[i]); }
+    add('forest: the same seed gives the same forest; predictions stay inside the range of the outcomes', maxDiff(fa, fb) === 0 && fa.every(v => v >= lo && v <= hi)); }
+  { // lasso: optimality conditions at the chosen penalty
+    const f = fitPen(Xc2, yc, 1, 30), S0 = penSums(Xc2, yc), n = yc.length; let worst = 0;
+    for (let a = 1; a < S0.q; a++) { let g = 0;
+      for (let i = 0; i < n; i++) { let fit = f.bstd[0]; for (let k = 1; k < S0.q; k++) fit += f.bstd[k] * S0.Z[k][i]; g += S0.Z[a][i] * (yc[i] - fit); }
+      g /= n; worst = Math.max(worst, f.bstd[a] !== 0 ? Math.abs(g - f.lambda * Math.sign(f.bstd[a])) : Math.max(0, Math.abs(g) - f.lambda)); }
+    add('lasso: the solution satisfies the optimality conditions', worst < 1e-8, fmt(worst)); }
+  { // leakage with the other learners (both-arm twin, so the arm indicator is an input)
+    const fold = makeFolds(d.t, 2, true, makeRng(11, 0, 0)), y2 = Float64Array.from(d.y); y2[1] += 5;
+    const d2 = { n: d.n, t: d.t, X: d.X, y: y2 }, spec = { p2: 'none', p3: 'oof', arms3: 'ct' }, bad = [];
+    for (const type of ['rf', 'gbm', 'ridge', 'lasso']) { const L = { type, prm: twinPrmOf({ rf: { trees: 30 }, gbm: { trees: 30 } }), rngFor: tag => makeRng(77, 0, hashStr(type + tag)) };
+      if (twinScores(spec, d, null, fold, 2, 2, L).h[1] !== twinScores(spec, d2, null, fold, 2, 2, L).h[1]) bad.push(type); }
+    add('cross-fitting with forest, boosting, ridge and lasso: a patient\'s own outcome does not enter that patient\'s score', !bad.length, bad.join(', ')); }
+  if (!ref) { add('comparison with R reference numbers', false, 'reference numbers are not loaded'); return out; }
+  if (ref.ridge) { const S0 = penSums(Xc2, yc), b = new Float64Array(S0.q); penCd(S0.G, S0.c, S0.q, S0.n, ref.ridge.lambda, 0, b);
+    add('R: ridge coefficients at a fixed penalty (closed form in R)', maxDiff(b, ref.ridge.coef) < 1e-8, fmt(maxDiff(b, ref.ridge.coef)));
+    const f = fitPen(Xc2, yc, 0, 30);
+    add('R: ridge leave-one-out error at all 30 penalties, and the chosen penalty', maxDiff(f.looErr, ref.ridge.loo) < 1e-8 && f.best + 1 === ref.ridge.best && close(f.lambda, ref.ridge.lambda_best, 1e-10),
+      fmt(maxDiff(f.looErr, ref.ridge.loo)) + ', penalty number ' + (f.best + 1)); }
+  if (ref.split) { const tr = growTree(d.X, d.y, Array.from({ length: d.n }, (_, i) => i), { maxSplits: 1, minSplit: 2, minLeaf: 1, mtry: 2 }, null);
+    add('R: best first split of a regression tree (all splits tried in R)', tr.feat[0] + 1 === ref.split.feature && close(tr.thr[0], ref.split.threshold, 1e-12), 'covariate ' + (tr.feat[0] + 1) + ' at ' + tr.thr[0].toFixed(4)); }
+  // --- comparison with R (base R, sandwich, optimize) on the fixed data set ---
+  add('R: Brent minimiser', close(fmin(x => (x - 2) * (x - 2) + Math.sin(5 * x), 1e-3, 10, Math.pow(EPS, 0.25)), ref.brent, 1e-7));
+  add('R: t distribution p-values', maxDiff([pt2(2.1, 37), pt2(0.3, 5), pt2(3.7, 198)], ref.pt2) < 1e-12, fmt(maxDiff([pt2(2.1, 37), pt2(0.3, 5), pt2(3.7, 198)], ref.pt2)));
+  { const mine = [pnormBoth(-1.3)[0], pnormBoth(0.4)[0], pnormBoth(4.5)[1], pnormBoth(2.9)[0], pnormBoth(3.1)[1]];
+    let rel = 0; mine.forEach((v, i) => { rel = Math.max(rel, Math.abs(v / ref.pnorm[i] - 1)); });
+    add('R: normal distribution, body and tail', rel < 1e-11, 'relative ' + fmt(rel)); }
+  const cmp = (name, got, want, tol) => { const dd = Math.max(Math.abs(got.est - want.est), Math.abs(got.se - want.se), Math.abs(got.p - want.p));
+    add(name, dd < tol, 'largest difference in estimate, SE, p: ' + fmt(dd)); };
+  cmp('R: ANCOVA, classical SE', estLinear(d, d.X, 'classical'), ref.ancova_classical, 1e-10);
+  cmp('R: ANCOVA, HC3 SE', estLinear(d, d.X, 'HC3'), ref.ancova_hc3, 1e-10);
+  add('R: SBML prediction at R\'s tuned weight (1 input)', maxDiff(predictSbml(Xc1, yc, [ref.r1], [d.X[0]], d.n), ref.h1) < 1e-11, fmt(maxDiff(predictSbml(Xc1, yc, [ref.r1], [d.X[0]], d.n), ref.h1)));
+  add('R: SBML prediction at R\'s tuned weights (2 inputs)', maxDiff(predictSbml(Xc2, yc, ref.r2, d.X, d.n), ref.h2) < 1e-11, fmt(maxDiff(predictSbml(Xc2, yc, ref.r2, d.X, d.n), ref.h2)));
+  add('R: SBML leave-one-out error', close(sbmlLooLoss(Xc1, yc, [ref.r1]), ref.loo1, 1e-12) && close(sbmlLooLoss(Xc2, yc, ref.r2), ref.loo2, 1e-12));
+  add('R: SBML tuned weight (1 input)', Math.abs(r1[0] - ref.r1) < 2e-4 * ref.r1, 'JS ' + r1[0].toFixed(6) + ', R ' + (+ref.r1).toFixed(6));
+  add('R: SBML tuned weights (2 inputs)', maxDiff(r2, ref.r2) < 5e-4 * Math.max(ref.r2[0], ref.r2[1]), 'JS ' + r2.map(v => v.toFixed(5)).join(', ') + '; R ' + ref.r2.map(v => (+v).toFixed(5)).join(', '));
+  add('R: twin scores from own tuning (1 input)', maxDiff(h1, ref.h1) < 1e-4, fmt(maxDiff(h1, ref.h1)));
+  const hR = Float64Array.from(ref.h1);
+  cmp('R: PROCOVA, HC3 SE (R\'s twin score)', estLinear(d, [hR], 'HC3'), ref.procova_hc3, 1e-10);
+  cmp('R: PROCOVA, classical SE (R\'s twin score)', estLinear(d, [hR], 'classical'), ref.procova_classical, 1e-10);
+  { const q = estPredcova(d, hR, [0], 2);
+    cmp('R: PREDCOVA estimate, SE and p (R\'s twin score)', q, ref.predcova, 1e-10);
+    add('R: PREDCOVA, the two parts of the SE', Math.abs(q.seCoef - ref.predcova.se_coef) < 1e-10 && Math.abs(q.seTau - ref.predcova.se_tau) < 1e-10); }
+  { const flat = Float64Array.from(d.X[0], v => 1 + 1e-9 * v), fit = lm([ones(d.n), Float64Array.from(d.t), flat], d.y);
+    add('R: an almost constant twin score is dropped, as in lm', (fit.pos[2] < 0) === !!ref.flat_dropped);
+    cmp('R: estimate after the drop', estLinear(d, [flat], 'classical'), ref.flat_t, 1e-10); }
+  return out;
+}
+
+return { makeRng, pnormBoth, qnorm, pt2, compileExpr, compile, drawData, fmin, sbmlLooLoss, fitSbml, predictSbml,
+  twinScores, makeFolds, lm, estLinear, estPredcova, estOracle, estByFold, subDs, byFold, analyse, optOf, simulateTrial, runChunk, summarise,
+  benchmarks, toyData, selfTest, usesTwin, twinKey, mean, variance, corr, DISTS, FUNS, R_FLAT,
+  LEARNERS, TWIN_DEFAULTS, twinPrmOf, growTree, treeAt, fitForest, fitBoost, fitPen, penSums, penCd, penGrid, trainTwin, zCols, copulaOf, hashStr };
+}
+
+</script>
+<script>
+// =============================================================================
+// ui.js  --  page logic of the PREDCOVA Cross-Fit Lab (settings, runs, charts)
+// All numbers come from core.js; this file only collects settings and draws.
+// =============================================================================
+(function () {
+'use strict';
+const CORE = coreFactory();
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fx = (v, d) => (v == null || !isFinite(v)) ? '–' : (+v).toFixed(d);
+const pct = (v, d) => fx(100 * v, d == null ? 1 : d);
+const clone = o => JSON.parse(JSON.stringify(o));
+const store = { get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage may be unavailable */ } } };
+
+// ---------------------------------------------------------------------------
+// Settings: presets, default methods
+// ---------------------------------------------------------------------------
+const tw = (p2, p3, arms3) => ({ p2, p3, arms3 });
+const U = (name, a, b) => ({ name, dist: 'unif', a, b });
+// correlation matrices: all zero, or one common value
+const equi = (p, r) => Array.from({ length: p }, (_, i) => Array.from({ length: p }, (_, j) => (i === j ? 1 : r)));
+// Seven-covariate model of Højbjerre-Frandsen & Schuler. Covariates are named x1..x7 here; they are W1..W7 of the paper.
+const HF_F = '4.1*sin(abs(x2)) + 1.4*(abs(x3) > 2.5) + 1.5*(abs(x4) > 0.25) + 1.5*sin(abs(x5))';
+const HF_COVS = [U('x1', -2, 1), U('x2', -2, 1), { name: 'x3', dist: 'norm', a: 0, b: 3 }, { name: 'x4', dist: 'exp', a: 0.8, b: 0 },
+  { name: 'x5', dist: 'gamma', a: 5, b: 10 }, U('x6', 1, 2), U('x7', 1, 2)];
+const PRESETS = {
+  sin1d: { label: 'One covariate: f = sin(x1) (first PREDCOVA paper)', covs: [U('x1', 0, 2.5)], corr: equi(1, 0), f: 'sin(x1)', g: '0.7*cos(x1)', sigma: '0.7', zTerms: ['x1', 'x1^2'] },
+  p1_2var: { label: 'Two covariates (first PREDCOVA paper)', covs: [U('x1', 0, 2.5), U('x2', 0, 2)], corr: equi(2, 0.5), f: 'sin(0.7*(x1 + x2))', g: '0.7*cos(x1)', sigma: '0.7', zTerms: ['x1', 'x1^2'] },
+  p1_3var: { label: 'Three covariates (first PREDCOVA paper)', covs: [U('x1', 0, 2.5), U('x2', 0, 2), U('x3', 0, 2)], corr: equi(3, 0.5), f: 'sin(0.5*(x1 + x2 + x3))', g: '0.7*cos(x1)', sigma: '0.7', zTerms: ['x1', 'x1^2'] },
+  hf7_const: { label: 'Seven covariates, constant effect (Højbjerre-Frandsen & Schuler; x1…x7 = their W1…W7)', covs: HF_COVS, corr: equi(7, 0), f: HF_F, g: '0.835', sigma: '1.3', zTerms: ['x2', 'x2^2'] },
+  hf7_vary: { label: 'Seven covariates, varying effect (Højbjerre-Frandsen & Schuler; x1…x7 = their W1…W7)', covs: HF_COVS, corr: equi(7, 0), f: HF_F,
+    g: '4.3*sin(abs(x2))^2 + 1.4*(abs(x3) > 2.5) + 1.3*(abs(x4) > 0.25) + 4.1*(x2 > 0)*sin(abs(x5)) + 1.6*sin(abs(x6)) - (' + HF_F + ')', sigma: '1.3', zTerms: ['x2', 'x2^2'] }
+};
+// Default list: the methods of the R engine (functions.R) with its ids, without its internal row "ANCOVA with squares".
+// A cross-fitted twin enters ONE regression on all patients (the main estimator, decided 2026-11-19).
+const DEFAULT_METHODS = () => [
+  { id: 'anova', label: 'ANOVA', model: 'anova', on: true },
+  { id: 'ancova', label: 'ANCOVA', model: 'ancova', on: true },
+  { id: 'procova', label: 'PROCOVA, Phase 2 twin', model: 'procova', twin: tw('c', 'none', 'c'), learner: 'sbml', on: true },
+  { id: 'pred_fixed', label: 'PREDCOVA, Phase 2 twin', model: 'predcova', twin: tw('c', 'none', 'c'), learner: 'sbml', on: true },
+  { id: 'pred_trial_c', label: 'PREDCOVA, trial-only cross-fitted twin', model: 'predcova', twin: tw('none', 'oof', 'c'), learner: 'sbml', est: 'single', on: true },
+  { id: 'pred_trial_ct', label: 'PREDCOVA, trial-only cross-fitted twin, both arms', model: 'predcova', twin: tw('none', 'oof', 'ct'), learner: 'sbml', est: 'single', on: true },
+  { id: 'pred_pool_c', label: 'PREDCOVA, pooled cross-fitted twin', model: 'predcova', twin: tw('c', 'oof', 'c'), learner: 'sbml', est: 'single', on: true },
+  { id: 'pred_pool_ct', label: 'PREDCOVA, pooled cross-fitted twin, both arms', model: 'predcova', twin: tw('ct', 'oof', 'ct'), learner: 'sbml', est: 'single', on: true },
+  { id: 'oracle', label: 'Oracle (true f and g)', model: 'oracle', on: true }];
+// Sensitivity list: the same methods with every fold analysed separately and the K estimates averaged.
+const FOLD_METHODS = () => DEFAULT_METHODS().map(m => { if (m.est) { m.est = 'fold'; m.id = m.id.replace('pred_', 'pf_'); m.label += ' (fold by fold)'; } return m; });
+function applyPreset(S, key) { const P = PRESETS[key]; if (!P) return;
+  S.preset = key; S.covs = clone(P.covs); S.corr = clone(P.corr); S.f = P.f; S.g = P.g; S.sigma = P.sigma; S.zTerms = P.zTerms.slice(); }
+function defaults() { const S = { effect: true, n3c: 100, n3t: 100, n2c: 30, n2t: 30, K: 2, foldByArm: true, seStd: 'classical', sePro: 'HC3',
+  alpha: 0.05, seed: 2026, reps: 500, sweepVar: 'none', sweepVals: '50, 75, 100, 150', ref: 'ancova', focus: 'pred_pool_c',
+  workers: Math.max(1, Math.min(8, (navigator.hardwareConcurrency || 4) - 1)), twinPrm: CORE.TWIN_DEFAULTS(), methods: DEFAULT_METHODS() };
+  applyPreset(S, 'sin1d'); return S; }
+// Settings saved by an earlier version of the page: one correlation with ticks, "modifier covariates + degree", ANCOVA with squares.
+function migrate(o) {
+  const S = Object.assign(defaults(), o);
+  const p = S.covs.length, okc = Array.isArray(o.corr) && o.corr.length === p && o.corr.every(r => Array.isArray(r) && r.length === p);
+  if (!okc) { const rho = Math.max(0, Math.min(0.999, +o.rho || 0));
+    S.corr = S.covs.map((a, i) => S.covs.map((b, j) => (i === j ? 1 : (a.corr && b.corr && a.dist !== 'gamma' && b.dist !== 'gamma' ? rho : 0)))); }
+  if (!o.zTerms) { S.zTerms = []; (o.modCovs || []).forEach(nm => { for (let e = 1; e <= (o.degree | 0); e++) S.zTerms.push(e === 1 ? nm : nm + '^' + e); }); }
+  S.covs.forEach(c => { delete c.corr; }); delete S.rho; delete S.modCovs; delete S.degree;
+  // rows that are no longer offered: ANCOVA with squares; a twin trained on all Phase 3 patients without cross-fitting
+  S.methods = S.methods.filter(m => m.model !== 'ancova2' && !(m.twin && m.twin.p3 === 'all'));
+  const d = CORE.TWIN_DEFAULTS(), q = o.twinPrm || {}; S.twinPrm = {}; Object.keys(d).forEach(k => { S.twinPrm[k] = Object.assign(d[k], q[k] || {}); });
+  return S;
+}
+let ST = defaults();
+{ const saved = store.get('pcl_settings2'); if (saved && saved.covs && saved.methods) { try { ST = migrate(saved); } catch (e) { ST = defaults(); } } }
+let nextId = 1;
+const save = () => store.set('pcl_settings2', ST);
+// settings as passed to the core (a copy)
+function getS() { fixRefs(); const S = clone(ST); S.methods.forEach(m => { if (CORE.usesTwin(m) && !m.twin) m.twin = tw('c', 'oof', 'c'); }); return S; }
+// split "x1, x1^2, max(x1, x2)" at the commas that are not inside brackets
+function splitTop(s) { const out = []; let depth = 0, cur = '';
+  for (const ch of String(s)) { if (ch === '(') depth++; else if (ch === ')') depth--; if (ch === ',' && depth === 0) { out.push(cur); cur = ''; } else cur += ch; }
+  out.push(cur); return out.map(t => t.trim()).filter(Boolean); }
+
+// ---------------------------------------------------------------------------
+// Setup column
+// ---------------------------------------------------------------------------
+const opt = (v, label, cur) => '<option value="' + esc(v) + '"' + (String(v) === String(cur) ? ' selected' : '') + '>' + esc(label) + '</option>';
+const fld = (label, inner) => '<label class="f">' + esc(label) + inner + '</label>';
+const inp = (k, t, cls) => '<input id="k_' + k + '" data-k="' + k + '" data-t="' + t + '" type="' + (t === 'n' || t === 'i' ? 'number' : 'text') + '"' + (t === 'n' ? ' step="any"' : '') +
+  (cls ? ' class="' + cls + '"' : '') + ' value="' + esc(t === 'list' ? ST[k].join(', ') : ST[k]) + '">';
+const sel = (k, t, opts) => '<select id="k_' + k + '" data-k="' + k + '" data-t="' + t + '">' + opts.map(o => opt(o[0], o[1], ST[k])).join('') + '</select>';
+const MODELS = [['anova', 'ANOVA'], ['ancova', 'ANCOVA'], ['procova', 'PROCOVA'], ['predcova', 'PREDCOVA'], ['oracle', 'Oracle (true f and g)']];
+const LEARNER_OPTS = Object.keys(CORE.LEARNERS).map(k => [k, 'Twin: ' + CORE.LEARNERS[k]]);
+const learnerOf = m => (m.learner && CORE.LEARNERS[m.learner] ? m.learner : 'sbml');
+// Where a twin gets its training patients, in words.
+function twinText(m) { const t = m.twin || tw('c', 'oof', 'c'), parts = [], arm = t.p2 === 'ct' || (t.p3 !== 'none' && t.arms3 === 'ct');
+  if (t.p2 !== 'none') parts.push(t.p2 === 'c' ? 'Phase 2 controls' : 'Phase 2, both arms');
+  if (t.p3 === 'oof') parts.push((t.arms3 === 'c' ? 'Phase 3 controls' : 'Phase 3, both arms') + ' outside the patient’s fold');
+  return 'h(x) = ' + CORE.LEARNERS[learnerOf(m)] + ' twin trained on ' + (parts.join(' + ') || 'nothing') + (arm ? '; arm is an input, scored at T = 0' : ''); }
+// The fitted model, the estimate and its standard error of a method, written from the current settings.
+function formulaOf(m) {
+  const names = ST.covs.map(c => c.name), z = ['1'].concat(ST.zTerms || []), se = t => (t === 'HC3' ? 'robust (HC3) SE' : 'classical SE');
+  const form = m.twin && m.twin.p3 === 'oof' ? (m.est === 'fold' ? '; fitted in each fold, the K estimates averaged, variance = weighted sum of the fold variances' : '; one regression on all patients') : '';
+  if (m.model === 'anova') return ['Y ~ 1 + T', 'τ̂ = coefficient of T; ' + se(ST.seStd) + ', t test'];
+  if (m.model === 'ancova') return ['Y ~ 1 + T + ' + names.join(' + '), 'τ̂ = coefficient of T; ' + se(ST.seStd) + ', t test'];
+  if (m.model === 'procova') return ['Y ~ 1 + T + h(x)', 'τ̂ = coefficient of T; ' + se(ST.sePro) + ', t test', twinText(m) + form];
+  if (m.model === 'predcova') return ['Y ~ 1 + h(x) + T·z(x)′γ,  z(x) = (' + z.join(', ') + ')', 'τ̂ = mean of z(xᵢ)′γ̂;  Var = z̄′·HC3(γ̂)·z̄ + var(z(xᵢ)′γ̂)/n; z test',
+    twinText(m) + form];
+  if (m.model === 'oracle') return ['ψᵢ = g(xᵢ) + Tᵢeᵢ/π − (1 − Tᵢ)eᵢ/(1 − π),  eᵢ = Yᵢ − f(xᵢ) − g(xᵢ)Tᵢ', 'τ̂ = mean of ψᵢ;  Var = var(ψᵢ)/n; z test'];
+  return [];
+}
+const OPEN = { s1: true, s2: true, s3: true, s4: false, s5: false, s6: false, s7: true, s8: false, adv: false };
+const sec = (id, title, body) => '<details class="sec" data-sec="' + id + '"' + (OPEN[id] ? ' open' : '') + '><summary>' + title + '</summary><div class="body">' + body + '</div></details>';
+// The reference and the highlighted method must be methods that are switched on.
+function fixRefs() { const on = ST.methods.filter(m => m.on); if (!on.length) return;
+  if (!on.some(m => m.id === ST.ref)) ST.ref = (on.find(m => m.model === 'ancova') || on[0]).id;
+  if (!on.some(m => m.id === ST.focus)) ST.focus = (on.find(m => m.id === 'pred_pool_c') || on.filter(m => m.model === 'predcova').pop() || on[on.length - 1]).id; }
+function renderSetup() {
+  fixRefs();
+  const p = ST.covs.length, names = ST.covs.map(c => c.name);
+  const covs = ST.covs.map((c, i) => '<div class="cov"><div class="l1">' +
+    '<input id="cov_' + i + '_name" data-cov="' + i + ':name" type="text" value="' + esc(c.name) + '" aria-label="covariate name">' +
+    '<select id="cov_' + i + '_dist" data-cov="' + i + ':dist" aria-label="distribution">' + Object.keys(CORE.DISTS).map(d => opt(d, CORE.DISTS[d], c.dist)).join('') + '</select>' +
+    '<input id="cov_' + i + '_a" data-cov="' + i + ':a" type="number" step="any" value="' + esc(c.a) + '" aria-label="a">' +
+    '<input id="cov_' + i + '_b" data-cov="' + i + ':b" type="number" step="any" value="' + esc(c.b) + '" aria-label="b"' + (c.dist === 'exp' || c.dist === 'bern' ? ' disabled' : '') + '>' +
+    '<button class="mini" data-act="delcov" data-i="' + i + '" aria-label="remove covariate">×</button></div></div>').join('');
+  // correlation matrix: the lower triangle is typed, the upper triangle repeats it
+  let cm = '';
+  if (p > 1) { cm = '<p class="hint">Correlation matrix (of the normal variables behind the covariates; see the Guide). Type below the diagonal; the upper half repeats it. A Gamma covariate stays uncorrelated.</p><div class="tw"><table class="cm"><tr><th></th>' + names.map(n => '<th>' + esc(n) + '</th>').join('') + '</tr>' +
+    ST.covs.map((c, i) => '<tr><th>' + esc(c.name) + '</th>' + ST.covs.map((b, j) => '<td>' + (i === j ? '1' : i < j ? esc(ST.corr[i][j]) :
+      '<input id="cor_' + i + '_' + j + '" data-cor="' + i + ':' + j + '" type="number" step="any" min="-0.99" max="0.99" value="' + esc(ST.corr[i][j]) + '" aria-label="correlation of ' + esc(c.name) + ' and ' + esc(b.name) + '"' + (c.dist === 'gamma' || b.dist === 'gamma' ? ' disabled' : '') + '>') + '</td>').join('') + '</tr>').join('') +
+    '</table></div><div class="row" style="max-width:300px">' + fld('Set every correlation to', '<input id="corAll" type="number" step="any" min="-0.99" max="0.99" value="">') + '<button data-act="corall" style="align-self:end">Apply</button></div>'; }
+  const meths = ST.methods.map((m, i) => { const t = m.twin || tw('c', 'oof', 'c'), tu = CORE.usesTwin(m);
+    return '<div class="meth"><div class="l1"><input id="m_' + i + '_on" data-m="' + i + ':on" type="checkbox"' + (m.on ? ' checked' : '') + ' aria-label="use this method">' +
+      '<input id="m_' + i + '_label" data-m="' + i + ':label" type="text" value="' + esc(m.label) + '" aria-label="method name">' +
+      '<button class="mini" data-act="delm" data-i="' + i + '" aria-label="remove method">×</button></div><div class="l2">' +
+      '<select id="m_' + i + '_model" data-m="' + i + ':model" aria-label="analysis model">' + MODELS.map(o => opt(o[0], o[1], m.model)).join('') + '</select>' +
+      (tu ? '<select id="m_' + i + '_learner" data-m="' + i + ':learner" aria-label="learner of the twin">' + LEARNER_OPTS.map(o => opt(o[0], o[1], learnerOf(m))).join('') + '</select>' +
+        '<select id="m_' + i + '_p2" data-m="' + i + ':p2" aria-label="Phase 2 training data">' + [['none', 'Phase 2: not used'], ['c', 'Phase 2: controls'], ['ct', 'Phase 2: both arms']].map(o => opt(o[0], o[1], t.p2)).join('') + '</select>' +
+        '<select id="m_' + i + '_p3" data-m="' + i + ':p3" aria-label="Phase 3 training data">' + [['none', 'Phase 3: not used'], ['oof', 'Phase 3: cross-fitted']].map(o => opt(o[0], o[1], t.p3)).join('') + '</select>' +
+        (t.p3 !== 'none' ? '<select id="m_' + i + '_arms3" data-m="' + i + ':arms3" aria-label="Phase 3 arms used">' + [['c', 'Phase 3 arms: controls'], ['ct', 'Phase 3 arms: both']].map(o => opt(o[0], o[1], t.arms3)).join('') + '</select>' : '') +
+        (t.p3 === 'oof' ? '<select id="m_' + i + '_est" data-m="' + i + ':est" aria-label="how the estimate is formed">' + [['single', 'Estimate: one regression on all patients'], ['fold', 'Estimate: each fold separately, then averaged']].map(o => opt(o[0], o[1], m.est === 'fold' ? 'fold' : 'single')).join('') + '</select>' : '') : '') +
+      '</div><div class="fm">' + formulaOf(m).map(esc).join('<br>') + '</div></div>'; }).join('');
+  const P = ST.twinPrm, tp = (g, k, label, step) => fld(label, '<input id="tp_' + g + '_' + k + '" data-tp="' + g + ':' + k + '" type="number" step="' + (step || 'any') + '" value="' + esc(P[g][k]) + '">');
+  $('setup').innerHTML =
+    '<div class="btns" style="margin-bottom:6px"><button class="pri" data-act="draw">Draw one trial</button><button class="pri" data-act="run" id="btnRun">Run simulation</button><button data-act="stop" id="btnStop" disabled>Stop</button></div>' +
+    '<p class="hint" style="margin-bottom:8px">Choose a data model (1), set the trial sizes (2), then press “Run simulation”. Every other setting has a default.</p>' +
+    '<div class="err" id="setupErr" role="alert"></div>' +
+    sec('s1', '1. Data model',
+      fld('Start from', '<select id="k_preset" data-k="preset" data-t="s">' + Object.keys(PRESETS).map(k => opt(k, PRESETS[k].label, ST.preset)).join('') + opt('custom', 'Custom (edited)', ST.preset) + '</select>') +
+      '<p class="hint">Y = f(x) + g(x)·T + σ(x)·e. Covariates: name, distribution, parameters a and b.</p>' + covs +
+      '<div class="btns"><button data-act="addcov">Add covariate</button></div>' + cm +
+      fld('Control outcome mean f(x)', inp('f', 's', 'fx')) + fld('Treatment effect g(x)', inp('g', 's', 'fx')) +
+      '<div class="row">' + fld('Noise SD σ(x)', inp('sigma', 's', 'fx')) + fld('Treatment effect', sel('effect', 'b', [[true, 'as g(x)'], [false, 'none (g = 0)']])) + '</div>' +
+      '<p class="hint">Formulas use the covariate names, + − * / ^, comparisons such as (x1 > 1), and sin cos tan exp log sqrt abs min max expit pnorm. With “none” the run gives the Type I error instead of the power.</p>') +
+    sec('s2', '2. Trial sizes', '<div class="row">' +
+      fld('Phase 3 controls', inp('n3c', 'i')) + fld('Phase 3 treated', inp('n3t', 'i')) + fld('Phase 2 controls', inp('n2c', 'i')) + fld('Phase 2 treated', inp('n2t', 'i')) + '</div>') +
+    sec('s3', '3. Methods', '<p class="hint">Each method shows its fitted model, its estimate and standard error, and where its twin h(x) is trained. T = 1 for treated, 0 for control.</p>' + meths +
+      '<div class="btns"><button data-act="addm">Add method</button><button data-act="resetm">Default list</button><button data-act="foldm">Fold-by-fold list</button></div>' +
+      '<p class="hint">Default list: a cross-fitted twin enters one regression on all patients. Fold-by-fold list: the same methods with each fold analysed separately and the K estimates averaged (sensitivity check).</p>') +
+    sec('s4', '4. Prognostic model (digital twin)',
+      '<p class="hint">The learner is chosen per method in section 3. Its settings are here. The defaults are conventions: SBML as in the first PREDCOVA paper; forest as R’s randomForest; boosting with 100 trees, 3 splits and rate 0.1.</p>' +
+      '<div class="grp"><b>SBML</b><div class="row">' + tp('sbml', 'lo', 'Lower bound of r') + tp('sbml', 'hi', 'Upper bound of r') + tp('sbml', 'start', 'Start value of r') +
+        fld('Standardise covariates', '<select id="tp_sbml_std" data-tp="sbml:std">' + opt(false, 'no', P.sbml.std) + opt(true, 'yes', P.sbml.std) + '</select>') + '</div></div>' +
+      '<div class="grp"><b>Random forest</b><div class="row">' + tp('rf', 'trees', 'Trees', 1) + tp('rf', 'mtry', 'Covariates per split (0 = one third)', 1) + tp('rf', 'minNode', 'Split nodes larger than', 1) + '</div></div>' +
+      '<div class="grp"><b>Gradient boosting</b><div class="row">' + tp('gbm', 'trees', 'Trees', 1) + tp('gbm', 'depth', 'Splits per tree', 1) + tp('gbm', 'rate', 'Learning rate') + tp('gbm', 'bag', 'Share of patients per tree') + tp('gbm', 'minNode', 'Patients per leaf, at least', 1) + '</div></div>' +
+      '<div class="grp"><b>Ridge and lasso</b><div class="row">' + tp('pen', 'nlambda', 'Penalty values tried (chosen by leave-one-out)', 1) + '</div></div>' +
+      '<div class="btns"><button data-act="twdef">Defaults of this section</button></div>') +
+    sec('s5', '5. Cross-fitting', '<div class="row">' +
+      fld('Number of folds K', inp('K', 'i')) + fld('Folds are drawn', sel('foldByArm', 'b', [[true, 'within each arm'], [false, 'ignoring the arm']])) +
+      '</div><p class="hint">How each twin is trained is set per method in section 3.</p>') +
+    sec('s6', '6. Analysis settings',
+      fld('PREDCOVA: terms of z(x), separated by commas', '<input id="k_zTerms" data-k="zTerms" data-t="zl" type="text" class="fx" value="' + esc((ST.zTerms || []).join(', ')) + '">') +
+      '<p class="hint">Any functions of the covariates, for example x1, x1^2, x2, x1*x2, log(x2). The constant 1 is always the first element of z(x). Leave empty for z(x) = 1.</p>' +
+      '<div class="row">' + fld('SE for ANOVA and ANCOVA', sel('seStd', 's', [['classical', 'classical'], ['HC3', 'robust (HC3)']])) + fld('SE for PROCOVA', sel('sePro', 's', [['HC3', 'robust (HC3)'], ['classical', 'classical']])) + fld('Test level α', inp('alpha', 'n')) + '</div>' +
+      '<p class="hint">ANCOVA uses every covariate as a linear term. PREDCOVA always uses the HC3-based SE of the paper.</p>') +
+    sec('s7', '7. Simulation run',
+      '<div class="row">' + fld('Repetitions', inp('reps', 'i')) + fld('Compare several values of', sel('sweepVar', 's', [['none', 'nothing (one setting)'], ['n3', 'Phase 3 size per arm'], ['n2', 'Phase 2 size per arm'], ['K', 'number of folds K']])) + '</div>' +
+      (ST.sweepVar !== 'none' ? fld('Values to compare, separated by commas', inp('sweepVals', 's')) : '') +
+      fld('Method to highlight in the results', '<select id="k_focus" data-k="focus" data-t="s">' + ST.methods.filter(m => m.on).map(m => opt(m.id, m.label, ST.focus)).join('') + '</select>') +
+      fld('Reference method for differences', '<select id="k_ref" data-k="ref" data-t="s">' + ST.methods.filter(m => m.on).map(m => opt(m.id, m.label, ST.ref)).join('') + '</select>') +
+      '<details class="adv" data-sec="adv"' + (OPEN.adv ? ' open' : '') + '><summary>Advanced</summary><div class="row">' + fld('Seed', inp('seed', 'i')) + fld('CPU threads (speed only)', inp('workers', 'i')) + '</div>' +
+      '<p class="hint">The number of threads changes the speed, never the results: every repetition has its own random numbers.</p></details>') +
+    sec('s8', '8. Save or load settings',
+      '<textarea id="setText" aria-label="settings as text" spellcheck="false"></textarea><div class="btns"><button data-act="writeSet">Write current settings here</button><button data-act="loadSet">Load settings from the text</button><button data-act="defaults">Restore defaults</button></div>');
+}
+function setErr(msg) { const e = $('setupErr'); if (e) e.textContent = msg || ''; }
+$('setup').addEventListener('toggle', e => { const id = e.target.dataset && e.target.dataset.sec; if (id) OPEN[id] = e.target.open; }, true);
+const custom = () => { ST.preset = 'custom'; const s = $('k_preset'); if (s) s.value = 'custom'; };
+$('setup').addEventListener('change', e => {
+  const el = e.target, d = el.dataset;
+  if (d.k) { const t = d.t; ST[d.k] = t === 'n' ? parseFloat(el.value) : t === 'i' ? parseInt(el.value, 10) : t === 'b' ? el.value === 'true' : t === 'zl' ? splitTop(el.value) : el.value;
+    if (d.k === 'preset') { if (PRESETS[ST.preset]) applyPreset(ST, ST.preset); renderSetup(); }
+    else if (['f', 'g', 'sigma'].indexOf(d.k) >= 0) custom();
+    else if (['zTerms', 'seStd', 'sePro', 'sweepVar'].indexOf(d.k) >= 0) { if (d.k === 'zTerms') custom(); renderSetup(); }
+  } else if (d.cov) { const q = d.cov.split(':'), i = +q[0], c = ST.covs[i];
+    c[q[1]] = (q[1] === 'a' || q[1] === 'b') ? parseFloat(el.value) : el.value.trim();
+    if (q[1] === 'dist' && c.dist === 'gamma') ST.corr.forEach((r, j) => { if (j !== i) { r[i] = 0; ST.corr[i][j] = 0; } });
+    custom(); if (q[1] === 'dist' || q[1] === 'name') renderSetup();
+  } else if (d.cor) { const q = d.cor.split(':'), v = parseFloat(el.value); ST.corr[+q[0]][+q[1]] = ST.corr[+q[1]][+q[0]] = isFinite(v) ? v : 0; custom(); renderSetup();
+  } else if (d.tp) { const q = d.tp.split(':'); ST.twinPrm[q[0]][q[1]] = q[1] === 'std' ? el.value === 'true' : parseFloat(el.value);
+  } else if (d.m) { const q = d.m.split(':'), m = ST.methods[+q[0]];
+    if (q[1] === 'on') { m.on = el.checked; renderSetup(); } else if (q[1] === 'label') { m.label = el.value; renderSetup(); }
+    else if (q[1] === 'model') { m.model = el.value; if (CORE.usesTwin(m) && !m.twin) { m.twin = tw('c', 'oof', 'c'); m.est = 'single'; } renderSetup(); }
+    else if (q[1] === 'est' || q[1] === 'learner') { m[q[1]] = el.value; renderSetup(); }
+    else { m.twin[q[1]] = el.value; renderSetup(); } }
+  save();
+});
+$('setup').addEventListener('click', e => {
+  const b = e.target.closest('button[data-act]'); if (!b) return; const a = b.dataset.act, i = +b.dataset.i;
+  if (a === 'draw') { drawTrial(); selectTab('trial'); return; }
+  if (a === 'run') { runSim(); return; }
+  if (a === 'stop') { if (RUN) { RUN.stop = true; if (RUN.kill) RUN.kill(); } return; }
+  if (a === 'addcov') { let k = ST.covs.length + 1; while (ST.covs.some(c => c.name === 'x' + k)) k++; ST.covs.push(U('x' + k, 0, 1));
+    ST.corr.forEach(r => r.push(0)); ST.corr.push(ST.covs.map((_, j) => (j === ST.covs.length - 1 ? 1 : 0))); ST.preset = 'custom'; }
+  else if (a === 'delcov') { ST.covs.splice(i, 1); ST.corr.splice(i, 1); ST.corr.forEach(r => r.splice(i, 1)); ST.preset = 'custom'; }
+  else if (a === 'corall') { const v = parseFloat($('corAll').value); if (!isFinite(v) || Math.abs(v) >= 1) { setErr('Give a correlation between -1 and 1.'); return; }
+    ST.covs.forEach((c, r) => ST.covs.forEach((q, s) => { if (r !== s) ST.corr[r][s] = (c.dist === 'gamma' || q.dist === 'gamma') ? 0 : v; })); ST.preset = 'custom'; setErr(''); }
+  else if (a === 'twdef') { ST.twinPrm = CORE.TWIN_DEFAULTS(); }
+  else if (a === 'addm') { while (ST.methods.some(m => m.id === 'm' + nextId)) nextId++; ST.methods.push({ id: 'm' + nextId, label: 'New method ' + nextId, model: 'predcova', twin: tw('c', 'oof', 'c'), learner: 'sbml', est: 'single', on: true }); }
+  else if (a === 'delm') { ST.methods.splice(i, 1); }
+  else if (a === 'resetm') { ST.methods = DEFAULT_METHODS(); ST.ref = 'ancova'; ST.focus = 'pred_pool_c'; }
+  else if (a === 'foldm') { ST.methods = FOLD_METHODS(); ST.ref = 'ancova'; ST.focus = 'pf_pool_c'; }
+  else if (a === 'writeSet') { $('setText').value = JSON.stringify(ST, null, 1); return; }
+  else if (a === 'loadSet') { try { const o = JSON.parse($('setText').value); if (!o.covs || !o.methods) throw new Error('the text is not a settings file'); ST = migrate(o); setErr(''); } catch (err) { setErr('Could not load the settings: ' + err.message); return; } }
+  else if (a === 'defaults') { ST = defaults(); }
+  save(); renderSetup();
+});
+
+// ---------------------------------------------------------------------------
+// Tabs, tooltip
+// ---------------------------------------------------------------------------
+const TABS = [['trial', 'One trial'], ['sim', 'Simulation'], ['data', 'Your data'], ['log', 'Run log'], ['guide', 'Guide']];
+function selectTab(id) { TABS.forEach(t => { $('tab-' + t[0]).hidden = t[0] !== id; const b = $('tabbtn-' + t[0]); if (b) b.setAttribute('aria-selected', t[0] === id ? 'true' : 'false'); }); }
+$('tabs').innerHTML = TABS.map(t => '<button role="tab" id="tabbtn-' + t[0] + '" data-tab="' + t[0] + '">' + t[1] + '</button>').join('');
+$('tabs').addEventListener('click', e => { const b = e.target.closest('button[data-tab]'); if (b) selectTab(b.dataset.tab); });
+document.addEventListener('mousemove', e => { const t = e.target.closest ? e.target.closest('[data-tip]') : null, tip = $('tip');
+  if (!t) { tip.hidden = true; return; } tip.textContent = t.getAttribute('data-tip'); tip.hidden = false;
+  tip.style.left = Math.min(window.innerWidth - 330, e.clientX + 14) + 'px'; tip.style.top = (e.clientY + 14) + 'px'; });
+
+// ---------------------------------------------------------------------------
+// Charts (SVG). Colour = where the twin comes from; marker and line type = variant.
+// ---------------------------------------------------------------------------
+function styleOf(m) { let fam = 'none', shape = 'circle', dash = '', open = false;
+  if (m.model === 'oracle') { fam = 'oracle'; shape = 'diamond'; }
+  else if (m.model === 'anova') dash = '2 3';
+  else if (m.model === 'ancova') { shape = 'square'; dash = '6 3'; }
+  else if (m.model === 'ancova2') shape = 'tri';
+  else { const t = m.twin; fam = t.p3 === 'none' ? 'fixed' : t.p2 === 'none' ? 'trial' : 'pool';
+    open = t.p2 === 'ct' || (t.p3 !== 'none' && t.arms3 === 'ct'); if (open) dash = '6 3';
+    if (m.model === 'procova') { shape = 'square'; dash = '2 3'; }
+    else if (t.p3 === 'oof' && m.est === 'fold') shape = 'tri'; }        // fold by fold (sensitivity form)
+  return { color: 'var(--s-' + fam + ')', shape, dash, open }; }
+function marker(st, x, y, r, tip) { r = r || 4.5; const a = ' fill="' + (st.open ? 'var(--surface)' : st.color) + '" stroke="' + st.color + '" stroke-width="2"' + (tip ? ' data-tip="' + esc(tip) + '"' : '');
+  if (st.shape === 'square') return '<rect x="' + (x - r) + '" y="' + (y - r) + '" width="' + 2 * r + '" height="' + 2 * r + '"' + a + '/>';
+  if (st.shape === 'tri') return '<polygon points="' + x + ',' + (y - r - 1) + ' ' + (x + r + 1) + ',' + (y + r) + ' ' + (x - r - 1) + ',' + (y + r) + '"' + a + '/>';
+  if (st.shape === 'diamond') return '<polygon points="' + x + ',' + (y - r - 1.5) + ' ' + (x + r + 1.5) + ',' + y + ' ' + x + ',' + (y + r + 1.5) + ' ' + (x - r - 1.5) + ',' + y + '"' + a + '/>';
+  return '<circle cx="' + x + '" cy="' + y + '" r="' + r + '"' + a + '/>'; }
+const swatch = st => '<svg width="34" height="14" aria-hidden="true"><line x1="1" y1="7" x2="33" y2="7" stroke="' + st.color + '" stroke-width="2"' + (st.dash ? ' stroke-dasharray="' + st.dash + '"' : '') + '/>' + marker(st, 17, 7, 3.5) + '</svg>';
+const legend = ms => '<div class="legend">' + ms.map(m => '<span>' + swatch(styleOf(m)) + esc(m.label) + '</span>').join('') + '</div>';
+function ticks(lo, hi, n) { if (!(hi > lo)) { lo -= 1; hi += 1; } const raw = (hi - lo) / n, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(s => s * mag).find(s => s >= raw * 0.999), out = [];
+  for (let v = Math.ceil(lo / step - 1e-9) * step; v <= hi + 1e-9 * step; v += step) out.push(+v.toPrecision(12)); return out; }
+const tickFmt = tk => { const step = tk.length > 1 ? Math.abs(tk[1] - tk[0]) : 1, d = Math.max(0, Math.min(6, -Math.floor(Math.log10(step) + 1e-9))); return v => v.toFixed(d); };
+function pad(lo, hi, frac) { const r = (hi - lo) || Math.abs(hi) || 1; return [lo - frac * r, hi + frac * r]; }
+
+// One row per method: a point with an interval. Used for estimates and for rejection rates.
+function rowsChart(items, o) {
+  const W = 780, ml = 300, mr = 70, mt = 10, rh = 24, H = mt + rh * items.length + 44;
+  let lo = Infinity, hi = -Infinity; items.forEach(q => { if (isFinite(q.lo)) lo = Math.min(lo, q.lo); if (isFinite(q.hi)) hi = Math.max(hi, q.hi); });
+  if (o.vline != null) { lo = Math.min(lo, o.vline); hi = Math.max(hi, o.vline); } if (!isFinite(lo)) { lo = 0; hi = 1; }
+  const dm = pad(lo, hi, 0.06), X = v => ml + (v - dm[0]) / (dm[1] - dm[0]) * (W - ml - mr), tk = ticks(dm[0], dm[1], 6), tf = tickFmt(tk), y0 = mt + rh * items.length;
+  let s = '<svg class="ch" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(o.title) + '">';
+  tk.forEach(v => { s += '<line class="ax" x1="' + X(v) + '" y1="' + mt + '" x2="' + X(v) + '" y2="' + y0 + '"/><text x="' + X(v) + '" y="' + (y0 + 16) + '" text-anchor="middle">' + tf(v) + '</text>'; });
+  if (o.vline != null) s += '<line x1="' + X(o.vline) + '" y1="' + mt + '" x2="' + X(o.vline) + '" y2="' + y0 + '" stroke="var(--ink)" stroke-width="1" stroke-dasharray="4 3"/><text class="lab" x="' + X(o.vline) + '" y="' + (y0 + 32) + '" text-anchor="middle">' + esc(o.vlabel) + '</text>';
+  s += '<text x="' + (W - mr) + '" y="' + (y0 + 32) + '" text-anchor="end">' + esc(o.xlab) + '</text>';
+  items.forEach((q, i) => { const y = mt + rh * i + rh / 2, lab = q.label.length > 46 ? q.label.slice(0, 45) + '…' : q.label;
+    s += '<text class="lab" x="' + (ml - 12) + '" y="' + (y + 4) + '" text-anchor="end">' + esc(lab) + '</text>';
+    if (!isFinite(q.v)) { s += '<text x="' + (ml + 6) + '" y="' + (y + 4) + '">not available</text>'; return; }
+    s += '<line x1="' + X(q.lo) + '" y1="' + y + '" x2="' + X(q.hi) + '" y2="' + y + '" stroke="' + q.st.color + '" stroke-width="2"/>' + marker(q.st, X(q.v), y, 4.5, q.tip) +
+      '<text class="lab" x="' + (W - mr + 8) + '" y="' + (y + 4) + '">' + esc(q.text) + '</text>'; });
+  return s + '</svg>'; }
+
+// Lines over the values of the repeated setting.
+function linesChart(series, xs, o) {
+  const W = 780, H = 380, ml = 56, mr = 16, mt = 12, mb = 46;
+  let lo = Infinity, hi = -Infinity; series.forEach(q => q.y.forEach(v => { if (isFinite(v)) { lo = Math.min(lo, v); hi = Math.max(hi, v); } }));
+  if (!isFinite(lo)) { lo = 0; hi = 1; } const dy = pad(lo, hi, 0.08), dx = pad(Math.min.apply(null, xs), Math.max.apply(null, xs), 0.05);
+  const X = v => ml + (v - dx[0]) / (dx[1] - dx[0]) * (W - ml - mr), Y = v => H - mb - (v - dy[0]) / (dy[1] - dy[0]) * (H - mt - mb), tk = ticks(dy[0], dy[1], 6), tf = tickFmt(tk);
+  let s = '<svg class="ch" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(o.title) + '">';
+  tk.forEach(v => { s += '<line class="ax" x1="' + ml + '" y1="' + Y(v) + '" x2="' + (W - mr) + '" y2="' + Y(v) + '"/><text x="' + (ml - 8) + '" y="' + (Y(v) + 4) + '" text-anchor="end">' + tf(v) + '</text>'; });
+  xs.forEach(v => { s += '<text x="' + X(v) + '" y="' + (H - mb + 18) + '" text-anchor="middle">' + v + '</text>'; });
+  s += '<text class="lab" x="' + ((ml + W - mr) / 2) + '" y="' + (H - 8) + '" text-anchor="middle">' + esc(o.xlab) + '</text><text class="lab" x="14" y="' + ((mt + H - mb) / 2) + '" text-anchor="middle" transform="rotate(-90 14 ' + ((mt + H - mb) / 2) + ')">' + esc(o.ylab) + '</text>';
+  series.forEach(q => { const pts = q.y.map((v, i) => isFinite(v) ? X(xs[i]) + ',' + Y(v) : null).filter(Boolean);
+    s += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + q.st.color + '" stroke-width="2"' + (q.st.dash ? ' stroke-dasharray="' + q.st.dash + '"' : '') + '/>'; });
+  series.forEach(q => q.y.forEach((v, i) => { if (isFinite(v)) s += marker(q.st, X(xs[i]), Y(v), 4.5, q.label + '\n' + o.xlab + ' ' + xs[i] + ': ' + v.toFixed(1) + (q.se ? ' (MC SE ' + q.se[i].toFixed(1) + ')' : '')); }));
+  return s + '</svg>'; }
+
+// Outcome against one covariate for one simulated trial.
+function scatterChart(d, k, name, h, showF) {
+  const W = 780, H = 360, ml = 52, mr = 14, mt = 10, mb = 44, x = d.X[k];
+  let xl = Infinity, xh = -Infinity, yl = Infinity, yh = -Infinity;
+  for (let i = 0; i < d.n; i++) { xl = Math.min(xl, x[i]); xh = Math.max(xh, x[i]); yl = Math.min(yl, d.y[i]); yh = Math.max(yh, d.y[i]); }
+  const dx = pad(xl, xh, 0.03), dy = pad(yl, yh, 0.05), X = v => ml + (v - dx[0]) / (dx[1] - dx[0]) * (W - ml - mr), Y = v => H - mb - (v - dy[0]) / (dy[1] - dy[0]) * (H - mt - mb);
+  const tx = ticks(dx[0], dx[1], 7), ty = ticks(dy[0], dy[1], 6), fxx = tickFmt(tx), fyy = tickFmt(ty);
+  let s = '<svg class="ch" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Outcome against ' + esc(name) + '">';
+  ty.forEach(v => { s += '<line class="ax" x1="' + ml + '" y1="' + Y(v) + '" x2="' + (W - mr) + '" y2="' + Y(v) + '"/><text x="' + (ml - 8) + '" y="' + (Y(v) + 4) + '" text-anchor="end">' + fyy(v) + '</text>'; });
+  tx.forEach(v => { s += '<text x="' + X(v) + '" y="' + (H - mb + 18) + '" text-anchor="middle">' + fxx(v) + '</text>'; });
+  s += '<text class="lab" x="' + ((ml + W - mr) / 2) + '" y="' + (H - 8) + '" text-anchor="middle">' + esc(name) + '</text><text class="lab" x="14" y="' + ((mt + H - mb) / 2) + '" text-anchor="middle" transform="rotate(-90 14 ' + ((mt + H - mb) / 2) + ')">outcome Y</text>';
+  for (let i = 0; i < d.n; i++) { const c = d.t[i] ? 'var(--s-trial)' : 'var(--s-fixed)', px = X(x[i]).toFixed(1), py = Y(d.y[i]).toFixed(1);
+    s += d.t[i] ? '<polygon points="' + px + ',' + (py - 4) + ' ' + (+px + 3.6) + ',' + (+py + 3) + ' ' + (px - 3.6) + ',' + (+py + 3) + '" fill="none" stroke="' + c + '" stroke-width="1.3"/>' : '<circle cx="' + px + '" cy="' + py + '" r="3" fill="' + c + '" fill-opacity="0.55"/>'; }
+  const ord = Array.from({ length: d.n }, (_, i) => i).sort((a, b) => x[a] - x[b]);
+  if (showF && d.f) s += '<polyline points="' + ord.map(i => X(x[i]).toFixed(1) + ',' + Y(d.f[i]).toFixed(1)).join(' ') + '" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="5 4"/>';
+  if (h) for (let i = 0; i < d.n; i++) s += '<rect x="' + (X(x[i]) - 2.2).toFixed(1) + '" y="' + (Y(h[i]) - 2.2).toFixed(1) + '" width="4.4" height="4.4" fill="var(--ink)" data-tip="twin score ' + h[i].toFixed(3) + (d.fold ? '\nfold ' + d.fold[i] : '') + '"/>';
+  return s + '</svg>'; }
+
+// ---------------------------------------------------------------------------
+// Model facts (true effect, benchmarks), cached per model
+// ---------------------------------------------------------------------------
+let benchKey = null, benchVal = null;
+function benchOf(C) { const S = C.S, key = JSON.stringify([S.covs, S.corr, S.f, S.g, S.sigma, S.effect, S.zTerms, S.n3c, S.n3t, S.alpha]);
+  if (key !== benchKey) { benchVal = CORE.benchmarks(C); benchKey = key; } return benchVal; }
+const factsHtml = b => '<div class="facts"><span>True average effect τ = <b>' + fx(b.tau, 4) + '</b></span><span>Var f = <b>' + fx(b.varF, 4) + '</b></span><span>Var g = <b>' + fx(b.varG, 4) + '</b></span>' +
+  '<span>mean σ² = <b>' + fx(b.s2, 4) + '</b></span><span>share of control variance explained by f = <b>' + pct(b.r2f, 0) + '%</b></span></div>';
+
+// ---------------------------------------------------------------------------
+// Tab: one trial
+// ---------------------------------------------------------------------------
+let TRIAL = null, trialView = { rep: 0, cov: 0, twin: '' };
+function drawTrial() {
+  let S, C; try { S = getS(); C = CORE.compile(S); } catch (e) { setErr(e.message); return; }
+  setErr('');
+  try { const d = CORE.simulateTrial(C, trialView.rep, 0); d.p3.fold = d.fold;
+    TRIAL = { S, C, d, res: CORE.analyse(C.methods, d.p3, d.p2, d.fold, CORE.optOf(C, trialView.rep, 0)), bench: benchOf(C) }; }
+  catch (e) { setErr(e.message); return; }
+  renderTrial();
+}
+function twinInfo(t) { const nm = CORE.LEARNERS[t.learner] || 'SBML', fl = t.flat > 0 ? ' (flat)' : '';
+  if (!t.learner || t.learner === 'sbml') return 'r = ' + t.r.map(v => fx(v, 3)).join(', ') + fl;
+  if (t.lambda != null) return nm + ': penalty ' + (+t.lambda).toPrecision(3) + ', ' + fx(t.nz, 1) + ' inputs kept' + fl;
+  return nm + fl; }
+function renderTrial() {
+  const el = $('tab-trial');
+  if (!TRIAL) { el.innerHTML = '<h2>One trial</h2><p>Press “Draw one trial”.</p>'; return; }
+  const T = TRIAL, S = T.S, ms = T.C.methods, twins = T.res.filter(q => q.tw), target = S.effect ? T.bench.tau : 0;
+  if (trialView.cov >= T.C.p) trialView.cov = 0;
+  if (!twins.some(q => q.id === trialView.twin)) trialView.twin = twins.length ? (twins.find(q => q.id === S.focus) || twins.find(q => q.id === 'pred_pool_c') || twins[0]).id : '';
+  const tsel = twins.find(q => q.id === trialView.twin), lab = id => ms.find(m => m.id === id).label;
+  const items = T.res.map((q, i) => ({ label: ms[i].label, st: styleOf(ms[i]), v: q.est, lo: q.est - 1.96 * q.se, hi: q.est + 1.96 * q.se, text: fx(q.est, 3),
+    tip: ms[i].label + '\nestimate ' + fx(q.est, 4) + ', SE ' + fx(q.se, 4) + ', p ' + fx(q.p, 4) }));
+  const rows = T.res.map((q, i) => '<tr><td>' + esc(ms[i].label) + '</td>' + (q.err ? '<td colspan="8" class="wrapok">not available: ' + esc(q.err) + '</td>' :
+    '<td>' + fx(q.est, 4) + '</td><td>' + fx(q.se, 4) + '</td><td>' + fx(q.est - 1.96 * q.se, 3) + ' to ' + fx(q.est + 1.96 * q.se, 3) + '</td><td>' + fx(q.p, 4) + '</td>' +
+    '<td>' + (q.seCoef != null ? fx(q.seCoef, 4) + ' / ' + fx(q.seTau, 4) : '') + '</td><td>' + (q.tw ? fx(q.rho0, 3) : '') + '</td><td>' + (q.tw ? fx(q.tw.ntrain, 0) : '') + '</td>' +
+    '<td class="wrapok">' + (q.tw ? esc(twinInfo(q.tw)) : '') + '</td>') + '</tr>').join('');
+  el.innerHTML = '<h2>One trial, looked at closely</h2>' +
+    '<p>One simulated Phase 3 trial (' + S.n3c + ' controls, ' + S.n3t + ' treated) with its Phase 2 trial (' + S.n2c + ' + ' + S.n2t + '), analysed by every method. It is repetition number ' + trialView.rep + ' of the simulation with seed ' + S.seed + '.</p>' +
+    factsHtml(T.bench) +
+    '<div class="row" style="max-width:640px;margin-top:10px">' + fld('Repetition number', '<input id="tv_rep" type="number" min="0" value="' + trialView.rep + '">') +
+      fld('Horizontal axis', '<select id="tv_cov">' + T.C.names.map((n, i) => opt(i, n, trialView.cov)).join('') + '</select>') +
+      fld('Twin score shown', '<select id="tv_twin">' + twins.map(q => opt(q.id, lab(q.id), trialView.twin)).join('') + '</select>') + '</div>' +
+    '<h3>Data and twin score</h3><div class="legend"><span><svg width="14" height="14"><circle cx="7" cy="7" r="3.5" fill="var(--s-fixed)" fill-opacity="0.55"/></svg>Phase 3 control</span>' +
+      '<span><svg width="14" height="14"><polygon points="7,2 12,11 2,11" fill="none" stroke="var(--s-trial)" stroke-width="1.3"/></svg>Phase 3 treated</span>' +
+      '<span><svg width="14" height="14"><rect x="4.5" y="4.5" width="5" height="5" fill="var(--ink)"/></svg>twin score h(x)</span>' +
+      (T.C.p === 1 ? '<span><svg width="30" height="14"><line x1="1" y1="7" x2="29" y2="7" stroke="var(--muted)" stroke-width="2" stroke-dasharray="5 4"/></svg>true f(x)</span>' : '') + '</div>' +
+    scatterChart(T.d.p3, trialView.cov, T.C.names[trialView.cov], tsel ? tsel.tw.h : null, T.C.p === 1) +
+    '<p class="cap">The twin score predicts the outcome under control. A cross-fitted score for a patient comes from a twin trained without that patient’s fold, so with K folds the squares follow K slightly different curves.</p>' +
+    '<h3>Estimates with 95% intervals</h3>' + rowsChart(items, { title: 'Estimates by method', xlab: 'estimated average effect', vline: target, vlabel: 'true τ' }) +
+    '<div class="tw"><table class="j"><thead><tr><th>Method</th><th>Estimate</th><th>SE</th><th>95% interval</th><th>p</th><th>SE parts<br>coef. / effects</th><th>Twin R</th><th>Training<br>patients</th><th>Twin details</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    '<p class="cap">Twin R = correlation of the twin score with the outcome among Phase 3 controls. Twin details: for SBML the tuned weights r, one per covariate, then the arm indicator for a both-arm twin; for ridge and lasso the chosen penalty and the number of inputs kept; for cross-fitted twins the average over folds. “flat” = the score is almost one constant. Intervals are estimate ± 1.96 SE.</p>';
+}
+$('tab-trial').addEventListener('change', e => { const id = e.target.id;
+  if (id === 'tv_rep') { trialView.rep = Math.max(0, parseInt(e.target.value, 10) || 0); drawTrial(); }
+  else if (id === 'tv_cov') { trialView.cov = +e.target.value; renderTrial(); }
+  else if (id === 'tv_twin') { trialView.twin = e.target.value; renderTrial(); } });
+
+// ---------------------------------------------------------------------------
+// Tab: simulation
+// ---------------------------------------------------------------------------
+let SIM = null, RUN = null, WURL = null, workersBroken = false, simPoint = 0;
+function workerUrl() { if (!WURL) { const src = coreFactory.toString() + '\nvar C = coreFactory();\nonmessage = function (e) { try { var d = e.data; postMessage(C.runChunk(d.S, d.from, d.to, d.sw)); } catch (err) { postMessage({ error: String((err && err.message) || err) }); } };';
+  WURL = URL.createObjectURL(new Blob([src], { type: 'text/javascript' })); } return WURL; }
+// Run R repetitions of setting Sv. Uses Web Workers when the browser allows them, else the page itself.
+function runReps(Sv, R, sw, onProg) {
+  return new Promise((resolve, reject) => {
+    const M = Sv.methods.filter(m => m.on).length, KEYS = ['est', 'se', 'p', 'rho', 'flat'], raw = { err: null, ms: 0 };
+    KEYS.forEach(k => { raw[k] = new Float64Array(M * R); });
+    const W = Math.max(1, Math.min(32, ST.workers | 0 || 1)), size = Math.max(1, Math.min(20, Math.ceil(R / (W * 6)))), queue = [], workers = [];
+    for (let a = 0; a < R; a += size) queue.push([a, Math.min(R, a + size)]);
+    let done = 0, finished = false, anyOk = false, fellBack = false; const t0 = performance.now();
+    const keep = o => { const n = o.to - o.from; for (let m = 0; m < M; m++) KEYS.forEach(k => raw[k].set(o[k].subarray(m * n, (m + 1) * n), m * R + o.from));
+      if (o.err && !raw.err) raw.err = o.err; raw.ms += o.ms; done += n; onProg(done, (performance.now() - t0) / done); };
+    const end = (err) => { if (finished) return; finished = true; workers.forEach(w => w.terminate()); RUN.kill = null; if (err) reject(err); else resolve(raw); };
+    RUN.kill = () => end(new Error('stopped'));
+    const mainLoop = () => { const step = () => { if (finished) return; if (RUN.stop) { end(new Error('stopped')); return; }
+      const c = queue.shift(); if (!c) { end(); return; }
+      try { const to = Math.min(c[1], c[0] + 2); keep(CORE.runChunk(Sv, c[0], to, sw)); if (to < c[1]) queue.unshift([to, c[1]]); } catch (e) { end(e); return; }
+      setTimeout(step, 0); }; step(); };
+    const fallback = () => { if (fellBack) return; fellBack = true; workersBroken = true; workers.forEach(w => { if (w.cur) queue.unshift(w.cur); w.terminate(); }); workers.length = 0; mainLoop(); };
+    const give = w => { const c = queue.shift(); if (!c) { w.cur = null; if (workers.every(x => !x.cur)) end(); return; } w.cur = c; w.postMessage({ S: Sv, from: c[0], to: c[1], sw }); };
+    let url = null; if (!workersBroken && typeof Worker !== 'undefined') { try { url = workerUrl(); } catch (e) { url = null; } }
+    if (url) for (let i = 0; i < Math.min(W, queue.length); i++) { let w; try { w = new Worker(url); } catch (e) { break; }
+      w.onmessage = ev => { if (finished || fellBack) return; if (ev.data.error) { end(new Error(ev.data.error)); return; } anyOk = true; keep(ev.data); give(w); };
+      w.onerror = ev => { if (finished) return; if (!anyOk) fallback(); else end(new Error('worker error ' + (ev.message || ''))); };
+      workers.push(w); }
+    if (!workers.length) { workersBroken = true; mainLoop(); } else workers.forEach(give);
+  });
+}
+function setRunning(on) { const a = $('btnRun'), b = $('btnStop'); if (a) a.disabled = on; if (b) b.disabled = !on; }
+async function runSim() {
+  if (RUN) return;
+  let S, C0; try { S = getS(); C0 = CORE.compile(S); } catch (e) { setErr(e.message); return; }
+  let vals = [null];
+  if (S.sweepVar !== 'none') { vals = String(S.sweepVals).split(',').map(s => parseInt(s, 10)).filter(v => isFinite(v));
+    if (!vals.length || vals.some(v => v < (S.sweepVar === 'n2' ? 0 : 2))) { setErr('Give the values to repeat over as whole numbers separated by commas.'); return; } }
+  if (!(S.reps >= 2)) { setErr('Use at least 2 repetitions.'); return; }
+  const variant = v => { const Sv = clone(S); if (v != null) { if (S.sweepVar === 'n3') Sv.n3c = Sv.n3t = v; else if (S.sweepVar === 'n2') Sv.n2c = Sv.n2t = v; else Sv.K = v; } return Sv; };
+  try { vals.forEach(v => CORE.compile(variant(v))); } catch (e) { setErr(e.message); return; }
+  setErr(''); selectTab('sim'); RUN = { stop: false, kill: null }; setRunning(true); simPoint = 0;
+  const methods = C0.methods.map(m => ({ id: m.id, label: m.label, model: m.model, twin: m.twin, est: m.est })), ref = methods.findIndex(m => m.id === S.ref);
+  $('tab-sim').innerHTML = '<h2>Simulation</h2><p id="simProg">Working out the true effect…</p><progress id="simBar" max="1" value="0"></progress>';
+  await new Promise(r => setTimeout(r, 30));
+  try {
+    const bench = benchOf(C0), target = S.effect ? bench.tau : 0;
+    SIM = { S, bench, target, methods, ref, points: [], vals, done: false, started: new Date().toISOString() };
+    for (let v = 0; v < vals.length; v++) {
+      const Sv = variant(vals[v]), sw = S.sweepVar === 'K' ? 0 : v;       // a sweep over K reuses the same data
+      const raw = await runReps(Sv, S.reps, sw, (done, ms) => { const p = $('simProg'), b = $('simBar');
+        if (p) p.textContent = (vals.length > 1 ? 'Setting ' + (v + 1) + ' of ' + vals.length + ': ' : '') + done + ' of ' + S.reps + ' repetitions, ' + ms.toFixed(0) + ' ms each' + (workersBroken ? ' (no parallel workers in this browser)' : '');
+        if (b) b.value = (v + done / S.reps) / vals.length; });
+      SIM.points.push({ val: vals[v], N: Sv.n3c + Sv.n3t, rows: CORE.summarise(raw, methods.length, S.reps, target, S.alpha, Sv.n3c + Sv.n3t, ref), err: raw.err });
+    }
+    SIM.done = true; addLog(); renderSim();
+  } catch (e) { $('tab-sim').innerHTML = '<h2>Simulation</h2><p class="err">' + (e.message === 'stopped' ? 'Stopped before the run finished. No results are shown for an unfinished run.' : esc(e.message)) + '</p>'; }
+  RUN = null; setRunning(false);
+}
+const SWEEP_LAB = { n3: 'Phase 3 patients per arm', n2: 'Phase 2 patients per arm', K: 'number of folds K' };
+const card = (k, big, text) => '<div class="card"><div class="k">' + esc(k) + '</div><div class="big">' + big + '</div><p>' + text + '</p></div>';
+// Patients saved at equal precision: N (1 - variance ratio), with an approximate 95% range from the Monte Carlo SE of the ratio.
+function savedOf(q, N) { if (!isFinite(q.varRatio) || !isFinite(q.varRatioSE) || !(q.varRatio > 0)) return null;
+  const sl = q.varRatioSE / q.varRatio; return { v: N * (1 - q.varRatio), lo: N * (1 - q.varRatio * Math.exp(1.96 * sl)), hi: N * (1 - q.varRatio * Math.exp(-1.96 * sl)) }; }
+const signed = v => { const r = Math.round(v); return (r < 0 ? '−' : '') + Math.abs(r); };
+// The wording rules of the headline boxes (also listed in the Guide):
+//   a rate is "consistent with its target" when it is within 1.96 Monte Carlo SE of the target;
+//   a difference from the reference is named only when it is beyond 1.96 of its Monte Carlo SE.
+function headline(S, pt, ms, fi, refIx) {
+  const fq = pt.rows[fi], fl = esc(ms[fi].label), rq = refIx >= 0 ? pt.rows[refIx] : null, rl = rq ? esc(ms[refIx].label) : '';
+  let c = '';
+  if (S.effect) {
+    let t = 'Share of the simulated trials in which the method rejects “no effect” (two-sided p below ' + S.alpha + ').';
+    if (rq && fi !== refIx) { const sig = Math.abs(fq.dRej) > 1.96 * fq.dRejSE;
+      t += ' ' + rl + ': ' + pct(rq.rej) + '%. Difference ' + (fq.dRej >= 0 ? '+' : '−') + pct(Math.abs(fq.dRej)) + ' points (Monte Carlo SE ' + pct(fq.dRejSE) + '): ' +
+        (sig ? '<b>' + (fq.dRej > 0 ? 'higher' : 'lower') + ' than the reference</b>.' : '<b>not distinguishable from the reference</b> at this number of repetitions.'); }
+    c += card('Power', pct(fq.rej) + '%', t);
+  } else {
+    const se0 = Math.sqrt(S.alpha * (1 - S.alpha) / fq.k), dz = (fq.rej - S.alpha) / se0;
+    c += card('Type I error', pct(fq.rej) + '%', 'Share of the simulated trials in which the method rejects “no effect” although there is no effect. Target ' + (+(100 * S.alpha).toFixed(2)) + '% (Monte Carlo SE ' + pct(se0) + '): ' +
+      (Math.abs(dz) <= 1.96 ? '<b>consistent with the target</b>.' : dz > 0 ? '<b>above the target</b>: too many false positives.' : '<b>below the target</b>: the test is conservative.'));
+  }
+  { const se0 = Math.sqrt(0.95 * 0.05 / fq.k), dz = (fq.cover - 0.95) / se0;
+    c += card('Coverage of the 95% interval', pct(fq.cover) + '%', 'Share of the trials whose interval (estimate ± 1.96 SE) contains the true effect. Target 95% (Monte Carlo SE ' + pct(se0) + '): ' +
+      (Math.abs(dz) <= 1.96 ? '<b>consistent with 95%</b>.' : dz < 0 ? '<b>below 95%</b>: the intervals are too narrow.' : '<b>above 95%</b>: the intervals are wider than needed.')); }
+  if (rq && fi !== refIx) { const sv = savedOf(fq, pt.N);
+    if (sv) c += card('Patients saved', signed(sv.v) + ' of ' + pt.N, 'To be as precise as ' + rl + ' with ' + pt.N + ' patients, the method needs about ' + Math.round(pt.N - sv.v) + ' (approximate 95% range of the saving: ' + signed(sv.lo) + ' to ' + signed(sv.hi) + '). ' +
+      (sv.lo > 0 ? '<b>A saving.</b>' : sv.hi < 0 ? '<b>It needs more patients than the reference.</b>' : '<b>Not distinguishable from no saving</b> at this number of repetitions.')); }
+  return '<div class="cards">' + c + '</div><p class="cap">Highlighted method: ' + fl + (rq && fi !== refIx ? '. Reference: ' + rl : '') + '. ' +
+    (S.effect ? 'To see the Type I error, set “Treatment effect” to “none” in section 1 and run again.' : 'The treatment effect is switched off. To see the power, set “Treatment effect” to “as g(x)” in section 1 and run again.') + '</p>';
+}
+function renderSim() {
+  const el = $('tab-sim');
+  if (!SIM || !SIM.done) { el.innerHTML = '<h2>Simulation</h2><p>Press “Run simulation”. The pair of trials is simulated many times with the settings on the left, and every method analyses each pair. The results appear here.</p>'; return; }
+  const S = SIM.S, ms = SIM.methods, P = SIM.points, rejName = S.effect ? 'Power' : 'Type I error';
+  if (simPoint >= P.length) simPoint = 0; const pt = P[simPoint], refM = SIM.ref >= 0 ? ms[SIM.ref] : null, fi = ms.findIndex(m => m.id === S.focus);
+  let h = '<h2>Simulation results</h2><p>' + S.reps + ' simulated trials per setting. ' + (S.sweepVar === 'n3' ? '' : 'Phase 3: ' + S.n3c + ' controls and ' + S.n3t + ' treated. ') + (S.sweepVar === 'n2' ? '' : 'Phase 2: ' + S.n2c + ' and ' + S.n2t + '. ') + (S.sweepVar === 'K' ? '' : 'Folds: ' + S.K + '. ') +
+    (S.sweepVar !== 'none' ? 'Compared over ' + SWEEP_LAB[S.sweepVar] + ' = ' + SIM.vals.join(', ') + '. ' : '') + 'Seed ' + S.seed + '.</p>' + factsHtml(SIM.bench);
+  if (P.some(q => q.err)) h += '<p class="err">Some repetitions failed for a method. First message: ' + esc(P.find(q => q.err).err) + '</p>';
+  if (P.length > 1) h += '<div class="row" style="max-width:340px;margin-top:10px">' + fld('Show the boxes and tables for ' + SWEEP_LAB[S.sweepVar], '<select id="simPt">' + SIM.vals.map((v, i) => opt(i, v, simPoint)).join('') + '</select>') + '</div>';
+  if (fi >= 0 && pt.rows[fi].k > 1) h += headline(S, pt, ms, fi, SIM.ref);
+  if (P.length > 1) {
+    h += '<h3>' + rejName + ' against ' + SWEEP_LAB[S.sweepVar] + '</h3>' + legend(ms) +
+      linesChart(ms.map((m, i) => ({ label: m.label, st: styleOf(m), y: P.map(q => 100 * q.rows[i].rej), se: P.map(q => 100 * q.rows[i].rejSE) })), SIM.vals, { title: rejName, xlab: SWEEP_LAB[S.sweepVar], ylab: rejName + ' (%)' }) +
+      '<div class="tw"><table class="j"><thead><tr><th>Method</th>' + SIM.vals.map(v => '<th>' + v + '</th>').join('') + '</tr></thead><tbody>' +
+      ms.map((m, i) => '<tr><td>' + esc(m.label) + '</td>' + P.map(q => '<td>' + pct(q.rows[i].rej) + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>' +
+      '<p class="cap">' + rejName + ' in %. Monte Carlo standard error of one entry: about ' + fx(100 * Math.sqrt(0.25 / S.reps), 1) + ' points or less.' + (S.sweepVar === 'K' ? ' Every K uses the same simulated trials.' : ' Each value uses its own simulated trials.') + '</p>';
+  }
+  h += '<h3>' + rejName + ' by method' + (P.length > 1 ? ' at ' + SWEEP_LAB[S.sweepVar] + ' = ' + pt.val : '') + '</h3>' +
+    rowsChart(pt.rows.map((q, i) => ({ label: ms[i].label, st: styleOf(ms[i]), v: 100 * q.rej, lo: 100 * (q.rej - 1.96 * q.rejSE), hi: 100 * (q.rej + 1.96 * q.rejSE), text: pct(q.rej) + '%',
+      tip: ms[i].label + '\n' + rejName + ' ' + pct(q.rej, 2) + '% (MC SE ' + pct(q.rejSE, 2) + ')' })), { title: rejName + ' by method', xlab: rejName + ' (%), with 95% Monte Carlo interval', vline: S.effect ? null : 100 * S.alpha, vlabel: 'α' }) +
+    '<div class="tw"><table class="j"><thead><tr><th>Method</th><th>' + rejName + ' %<br>(MC SE)</th><th>Difference from<br>reference, points (SE)</th><th>Coverage %</th><th>Patients saved of ' + pt.N + '<br>(approx. 95% range)</th></tr></thead><tbody>' +
+    pt.rows.map((q, i) => { const sv = refM && i !== SIM.ref ? savedOf(q, pt.N) : null;
+      return '<tr' + (i === SIM.ref ? ' class="refrow"' : '') + '><td>' + esc(ms[i].label) + '</td><td>' + pct(q.rej) + ' (' + pct(q.rejSE) + ')</td><td>' + (i === SIM.ref || !refM ? '' : (q.dRej >= 0 ? '+' : '−') + pct(Math.abs(q.dRej)) + ' (' + pct(q.dRejSE) + ')') + '</td>' +
+        '<td>' + pct(q.cover) + '</td><td>' + (sv ? signed(sv.v) + ' (' + signed(sv.lo) + ' to ' + signed(sv.hi) + ')' : '') + '</td></tr>'; }).join('') + '</tbody></table></div>' +
+    '<p class="cap">Reference method (shaded): ' + (refM ? esc(refM.label) : 'none') + '. Every method analyses the same simulated trials, so the differences are paired. Patients saved = Phase 3 size × (1 − variance of the estimate ÷ variance of the reference): the number of patients the method can do without and still be as precise as the reference. It assumes the variance falls in proportion to 1 / size.</p>' +
+    '<details class="tech"><summary>Technical details</summary>' +
+    '<div class="tw"><table class="j"><thead><tr><th>Method</th><th>Bias<br>(MC SE)</th><th>N × variance</th><th>Variance ÷<br>reference (SE)</th><th>Mean SE</th><th>Mean SE ÷<br>true SD</th><th>Twin R</th><th>Flat twins %</th><th>Failed</th></tr></thead><tbody>' +
+    pt.rows.map((q, i) => '<tr' + (i === SIM.ref ? ' class="refrow"' : '') + '><td>' + esc(ms[i].label) + '</td><td>' + fx(q.bias, 4) + ' (' + fx(q.biasSE, 4) + ')</td><td>' + fx(q.nVar, 3) + '</td><td>' + (refM ? fx(q.varRatio, 3) + (isFinite(q.varRatioSE) ? ' (' + fx(q.varRatioSE, 3) + ')' : '') : '') + '</td><td>' + fx(q.meanSE, 4) + '</td><td>' + fx(q.seRatio, 3) + '</td>' +
+      '<td>' + (isFinite(q.rho) ? fx(q.rho, 3) : '') + '</td><td>' + (isFinite(q.flat) ? pct(q.flat) : '') + '</td><td>' + (S.reps - q.k) + '</td></tr>').join('') + '</tbody></table></div>' +
+    '<p class="cap">Bias = mean estimate − true effect. N × variance = Phase 3 size (' + pt.N + ') times the variance of the estimate over the repetitions; compare it with the benchmarks below. Mean SE ÷ true SD above 1 means the standard error is too large (conservative), below 1 too small. Twin R = mean correlation of the twin score with the outcome among Phase 3 controls. Flat twin = the score is almost one constant.</p>' +
+    '<h3>Large-sample benchmarks for this data model</h3><div class="tw"><table class="j"><thead><tr><th>Method</th><th>N × variance</th><th>Predicted ' + (S.effect ? 'power' : 'rejection') + ' % at N = ' + (S.n3c + S.n3t) + ' (the sizes of section 2)</th></tr></thead><tbody>' +
+    SIM.bench.rows.map(r => '<tr><td>' + esc(r.name) + '</td><td>' + fx(r.V, 3) + '</td><td>' + pct(r.power) + '</td></tr>').join('') + '</tbody></table></div>' +
+    '<p class="cap">Computed from a population sample of ' + SIM.bench.Npop.toLocaleString() + ' patients, not from the simulation above. They hold for large trials; small trials have somewhat larger variance. A simulated N × variance far from every benchmark is a warning sign.</p></details>';
+  el.innerHTML = h;
+}
+$('tab-sim').addEventListener('change', e => { if (e.target.id === 'simPt') { simPoint = +e.target.value; renderSim(); } });
+
+// ---------------------------------------------------------------------------
+// Tab: run log
+// ---------------------------------------------------------------------------
+let LOG = store.get('pcl_log') || [];
+function addLog() { LOG.unshift({ time: SIM.started, settings: SIM.S, tau: SIM.bench.tau, sweep: SIM.S.sweepVar, points: SIM.points.map(p => ({ value: p.val, N: p.N,
+  rows: p.rows.map((q, i) => ({ id: SIM.methods[i].id, label: SIM.methods[i].label, rejection: q.rej, rejectionSE: q.rejSE, bias: q.bias, nVar: q.nVar, seRatio: q.seRatio, coverage: q.cover, twinR: q.rho, usable: q.k })) })) });
+  LOG = LOG.slice(0, 40); store.set('pcl_log', LOG); renderLog(); }
+function renderLog() {
+  $('tab-log').innerHTML = '<h2>Run log</h2><p>Every finished simulation is recorded here with its full settings and seed, so that no run is forgotten. The log is kept in this browser only.</p>' +
+    '<div class="btns"><button id="logCopy">Copy the log as text (JSON)</button><button id="logClear">Clear the log</button></div><textarea id="logText" hidden aria-label="log as text"></textarea>' +
+    (LOG.length ? LOG.map(L => { const S = L.settings; return '<div class="logitem"><b>' + esc(L.time.replace('T', ' ').slice(0, 19)) + '</b> · ' + S.reps + ' repetitions · seed ' + S.seed + ' · Phase 3 ' + S.n3c + ' + ' + S.n3t + ' · Phase 2 ' + S.n2c + ' + ' + S.n2t + ' · K = ' + S.K +
+      (L.sweep !== 'none' ? ' · repeated over ' + SWEEP_LAB[L.sweep] : '') + ' · effect ' + (S.effect ? 'on' : 'off') + '<br><span class="mono">f = ' + esc(S.f) + ' ; g = ' + esc(S.g) + ' ; σ = ' + esc(S.sigma) + '</span>' +
+      '<div class="tw"><table class="j"><thead><tr><th>Method</th>' + L.points.map(p => '<th>' + (p.value == null ? 'rejection %' : p.value) + '</th>').join('') + '</tr></thead><tbody>' +
+      L.points[0].rows.map((r, i) => '<tr><td>' + esc(r.label) + '</td>' + L.points.map(p => '<td>' + pct(p.rows[i].rejection) + '</td>').join('') + '</tr>').join('') + '</tbody></table></div></div>'; }).join('')
+      : '<p class="hint">No run yet.</p>');
+}
+$('tab-log').addEventListener('click', e => {
+  if (e.target.id === 'logClear') { LOG = []; store.set('pcl_log', LOG); renderLog(); }
+  if (e.target.id === 'logCopy') { const t = $('logText'), txt = JSON.stringify(LOG, null, 1); t.value = txt; t.hidden = false; t.select();
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(() => { e.target.textContent = 'Copied'; }, () => { e.target.textContent = 'Select the text below and copy it'; }); } });
+
+// ---------------------------------------------------------------------------
+// Tab: your data
+// ---------------------------------------------------------------------------
+function parseCsv(txt, what) {
+  const lines = txt.split(/\r?\n/).map(l => l.trim()).filter(l => l && l[0] !== '#'); if (lines.length < 2) return null;
+  const sep = lines[0].indexOf('\t') >= 0 ? '\t' : lines[0].indexOf(';') >= 0 ? ';' : ',', head = lines[0].split(sep).map(s => s.trim().replace(/^"|"$/g, '')), cols = head.map(() => []);
+  lines.slice(1).forEach((l, r) => { const c = l.split(sep); if (c.length !== head.length) throw new Error(what + ', row ' + (r + 2) + ': ' + c.length + ' fields, expected ' + head.length);
+    c.forEach((v, j) => { const x = parseFloat(v); if (!isFinite(x)) throw new Error(what + ', row ' + (r + 2) + ', column ' + head[j] + ': not a number'); cols[j].push(x); }); });
+  return { head, cols };
+}
+function toDs(csv, names, what) { const col = nm => { const j = csv.head.indexOf(nm); if (j < 0) throw new Error(what + ': column "' + nm + '" is missing'); return csv.cols[j]; };
+  const t = col('t'); if (t.some(v => v !== 0 && v !== 1)) throw new Error(what + ': column t must be 0 (control) or 1 (treated)');
+  return { n: t.length, t: Uint8Array.from(t), y: Float64Array.from(col('y')), X: names.map(nm => Float64Array.from(col(nm))) }; }
+let DATA_RES = null;
+function analyseData() {
+  const out = $('dataOut');
+  try {
+    const c3 = parseCsv($('csv3').value, 'Phase 3'); if (!c3) throw new Error('Paste the Phase 3 data first (a header row, then one row per patient).');
+    const names = c3.head.filter(h => ['y', 't', 'fold'].indexOf(h) < 0); if (!names.length) throw new Error('Phase 3: no covariate columns found');
+    const p3 = toDs(c3, names, 'Phase 3'), c2 = parseCsv($('csv2').value, 'Phase 2'), p2 = c2 ? toDs(c2, names, 'Phase 2') : null, S = getS();
+    let fold, K = S.K; const jf = c3.head.indexOf('fold');
+    if (jf >= 0) { fold = Int32Array.from(c3.cols[jf]); K = Math.max.apply(null, c3.cols[jf]);
+      if (c3.cols[jf].some(v => v !== Math.floor(v) || v < 1) || new Set(c3.cols[jf]).size !== K || K < 2) throw new Error('Phase 3: the column “fold” must hold the whole numbers 1 to K (K at least 2), each used at least once'); }
+    else fold = CORE.makeFolds(p3.t, K, S.foldByArm !== false, CORE.makeRng(S.seed, 0, 999));
+    let zf; try { zf = (S.zTerms || []).map(t => CORE.compileExpr(t, names)); } catch (e) { throw new Error('z(x) in section 6: ' + e.message + '. Its terms must use the column names of the data.'); }
+    const ms = S.methods.filter(m => m.on && m.model !== 'oracle');
+    const o = CORE.optOf({ S, z: zf, modIx: [], p: names.length, twinPrm: CORE.twinPrmOf(S.twinPrm) }, 0, 999); o.K = K;
+    const res = CORE.analyse(ms, p3, p2, fold, o);
+    const refTxt = $('csvRef').value.trim(); let ref = null;
+    if (refTxt) { const cr = refTxt.split(/\r?\n/).map(l => l.split(/[,;\t]/).map(s => s.trim())); ref = {}; cr.forEach(r => { if (isFinite(parseFloat(r[1]))) ref[r[0]] = { est: parseFloat(r[1]), se: parseFloat(r[2]) }; }); }
+    DATA_RES = 'id,est,se,p\n' + res.map(q => [q.id, q.est, q.se, q.p].join(',')).join('\n');
+    out.innerHTML = '<p>' + p3.n + ' Phase 3 patients' + (p2 ? ', ' + p2.n + ' Phase 2 patients' : ', no Phase 2 data') + '. Covariates: ' + esc(names.join(', ')) + '. z(x) = (' + esc(['1'].concat(S.zTerms || []).join(', ')) + '). Folds: ' + (jf >= 0 ? 'from the column “fold”' : 'drawn here with seed ' + S.seed) + ', K = ' + K + '. Forest and boosting draw their random numbers with seed ' + S.seed + '.</p>' +
+      '<div class="tw"><table class="j"><thead><tr><th>Method id</th><th>Method</th><th>Estimate</th><th>SE</th><th>p</th><th>Twin R</th><th>Twin details</th>' + (ref ? '<th>Estimate − reference</th><th>SE − reference</th>' : '') + '</tr></thead><tbody>' +
+      res.map((q, i) => '<tr><td class="mono">' + esc(q.id) + '</td><td>' + esc(ms[i].label) + '</td>' + (q.err ? '<td colspan="5" class="wrapok">not available: ' + esc(q.err) + '</td>' :
+        '<td>' + q.est.toPrecision(10) + '</td><td>' + q.se.toPrecision(10) + '</td><td>' + q.p.toPrecision(6) + '</td><td>' + (q.tw ? fx(q.rho0, 4) : '') + '</td><td>' + (q.tw ? (q.tw.r.length ? q.tw.r.map(v => v.toPrecision(6)).join(', ') : esc(twinInfo(q.tw))) : '') + '</td>') +
+        (ref ? (ref[q.id] && !q.err ? '<td>' + (q.est - ref[q.id].est).toExponential(2) + '</td><td>' + (q.se - ref[q.id].se).toExponential(2) + '</td>' : '<td></td><td></td>') : '') + '</tr>').join('') + '</tbody></table></div>' +
+      '<div class="btns"><button id="dataCopy">Copy results as CSV</button></div>';
+  } catch (e) { out.innerHTML = '<p class="err">' + esc(e.message) + '</p>'; }
+}
+function renderData() {
+  const d = CORE.toyData(), ex = 'y,t,x1,x2\n' + Array.from({ length: d.n }, (_, i) => [d.y[i].toFixed(6), d.t[i], d.X[0][i].toFixed(6), d.X[1][i].toFixed(6)].join(',')).join('\n');
+  $('tab-data').innerHTML = '<h2>Analyse your own data</h2>' +
+    '<p>Paste a Phase 3 data set and, if you have one, a Phase 2 data set. Every method in the list on the left is applied (the oracle is skipped). This is also the way to compare this page with another program on exactly the same data.</p>' +
+    '<p class="hint">Format: comma-separated text with a header row. Needed columns: <span class="mono">y</span> (outcome) and <span class="mono">t</span> (0 = control, 1 = treated). Every other column is a covariate, except an optional column <span class="mono">fold</span> (1..K) that fixes the folds. The terms of z(x) come from section 6 and must use the column names of the data. The box below starts with a made-up example of 40 patients.</p>' +
+    '<div class="row" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">' + fld('Phase 3 data (example shown)', '<textarea id="csv3" spellcheck="false">' + esc(ex) + '</textarea>') + fld('Phase 2 data (optional)', '<textarea id="csv2" spellcheck="false"></textarea>') +
+    fld('Reference results to compare with (optional): id, estimate, SE', '<textarea id="csvRef" spellcheck="false" placeholder="ancova,0.1234,0.0567"></textarea>') + '</div>' +
+    '<div class="btns" style="margin-top:8px"><button class="pri" id="dataRun">Analyse</button></div><div id="dataOut"></div>';
+}
+$('tab-data').addEventListener('click', e => { if (e.target.id === 'dataRun') analyseData();
+  if (e.target.id === 'dataCopy' && DATA_RES) { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(DATA_RES).then(() => { e.target.textContent = 'Copied'; }, () => { e.target.textContent = 'Copy failed'; }); } });
+
+// ---------------------------------------------------------------------------
+// Tab: guide
+// ---------------------------------------------------------------------------
+$('tab-guide').innerHTML = '<h2>Guide</h2>' +
+  '<p>This page simulates a small Phase 2 trial and a Phase 3 trial from a model you choose, builds a digital twin score in several ways, and compares methods for estimating the average treatment effect in the Phase 3 trial.</p>' +
+  '<h3>Quick start</h3><ul><li>Section 1: choose a data model, or type your own.</li><li>Section 2: set the number of patients.</li><li>Press “Run simulation”. The boxes at the top of the results give the answer for the highlighted method in words.</li>' +
+  '<li>“Draw one trial” shows a single simulated trial with the twin score and every estimate.</li></ul>' +
+  '<h3>What it is for, and what it is not for</h3><ul><li>Use it to try settings quickly, to see what one trial looks like, and to check other software on the same data.</li>' +
+  '<li>Do not take manuscript numbers from it. Its random numbers differ from R, and a browser run is small. Reported results come from the R engine.</li><li>Every finished run is written to the run log with its settings and seed. Decide the scenarios for a paper before looking at results.</li></ul>' +
+  '<h3>The data model</h3><p class="mono">Y = f(x) + g(x)·T + σ(x)·e,   e ~ N(0, 1)</p><ul><li>f(x): mean outcome under control. g(x): treatment effect for a patient with covariates x. The target is the average effect τ = E[g(x)].</li>' +
+  '<li>You type f, g and σ as formulas of the covariates. Each covariate has its own distribution.</li>' +
+  '<li>Correlation matrix: one correlation for every pair of covariates (Gaussian copula). The number is the correlation of the underlying normal variables. For two normal covariates it is their correlation. For other distributions the correlation of the covariates themselves is smaller: 0.5 gives about 0.48 for two uniform covariates and about 0.4 when one covariate is skewed or binary. The page refuses a matrix that no set of covariates can have.</li>' +
+  '<li>Phase 2 and Phase 3 patients come from the same model. Arm sizes are fixed, not random.</li></ul>' +
+  '<h3>The digital twin</h3><p>The twin score h(x) predicts a patient’s outcome under control from the covariates. The learner is chosen per method (section 3) and its settings are in section 4.</p><ul>' +
+  '<li><b>SBML</b> (default): <span class="mono">h(x) = Σ w_j(x)·y_j / Σ w_j(x),  w_j(x) = exp(−Σ_k r_k²·(x_k − x_jk)²)</span>. A weighted mean of the training patients’ outcomes; patients similar to x get more weight. The weights r_k are tuned by leave-one-out prediction error (one r at a time; by default the search is on 0.001 to 10 and starts at 1).</li>' +
+  '<li><b>Random forest</b>: the mean of many regression trees, each grown on patients drawn with replacement, trying a random third of the covariates at each split.</li>' +
+  '<li><b>Gradient boosting</b>: small trees added one after another, each fitted to what the trees before it left unexplained.</li>' +
+  '<li><b>Ridge and lasso</b>: linear regression on the covariates with a penalty on the size of the coefficients; the penalty is chosen by leave-one-out prediction error. Lasso can set coefficients to zero.</li>' +
+  '<li>Forest, boosting, ridge and lasso are written out in this page from their textbook definitions. A forest or a boosted model does not give the same numbers as an R package, because the random draws differ. The default settings are conventions, not tuned values; with 30 training patients any learner is working at its limit.</li>' +
+  '<li>If treated patients are used for training, the arm is one more input and every patient is scored as a control (T = 0).</li><li>A twin is called flat when its score is almost one constant. Such a score carries no information and the analysis is then close to an analysis without a twin.</li></ul>' +
+  '<h3>Where a twin gets its training patients</h3><ul><li><b>Phase 2 only</b>: a fixed twin, trained before the Phase 3 trial is seen.</li><li><b>Cross-fitted</b>: the Phase 3 patients are split into K folds. The score of a patient comes from a twin trained on the other folds (plus Phase 2 if chosen). No patient’s own outcome enters that patient’s score.</li>' +
+  '<li>Any combination can be set per method in section 3, for PROCOVA or PREDCOVA.</li></ul>' +
+  '<h3>The methods and their formulas</h3><p>Section 3 shows, for every method, the fitted model, the estimate and the standard error, written from the current settings.</p><ul>' +
+  '<li><b>ANOVA</b>: <span class="mono">Y ~ 1 + T</span>. <b>ANCOVA</b>: <span class="mono">Y ~ 1 + T + x1 + … + xp</span> (every covariate as a linear term). Estimate = coefficient of T. Classical standard error unless changed in section 6, t test.</li>' +
+  '<li><b>PROCOVA</b>: <span class="mono">Y ~ 1 + T + h(x)</span>. Estimate = coefficient of T. Robust (HC3) standard error unless changed in section 6, t test.</li>' +
+  '<li><b>PREDCOVA</b>: <span class="mono">Y ~ 1 + h(x) + T·z(x)′γ</span>. z(x) is a list of functions of the covariates that you type in section 6; its first element is always 1. Any pre-specified list is admissible. Estimate <span class="mono">τ̂ = mean of z(xᵢ)′γ̂</span>. Variance <span class="mono">z̄′·HC3(γ̂)·z̄ + var(z(xᵢ)′γ̂)/n</span>, z test.</li>' +
+  '<li><b>Oracle</b>: <span class="mono">ψᵢ = g(xᵢ) + Tᵢeᵢ/π − (1 − Tᵢ)eᵢ/(1 − π)</span> with the true f and g, <span class="mono">τ̂ = mean of ψᵢ</span>. It marks the best any method can do.</li><li>All intervals are estimate ± 1.96 SE.</li></ul>' +
+  '<h3>How the estimate is formed with a cross-fitted twin</h3><ul><li><b>One regression on all patients</b> (default): every patient gets the score from the twin trained without that patient’s fold, and the scores of all folds enter one regression with one coefficient. This is what the R engine does.</li>' +
+  '<li><b>Each fold separately, then averaged</b> (sensitivity check): the analysis model is fitted K times, once on the patients of each fold. The estimate is the average of the K estimates weighted by fold size; its variance is the weighted sum of the K variances (a large-sample formula). Test: z for PREDCOVA, t with Satterthwaite degrees of freedom for PROCOVA.</li>' +
+  '<li>Fold-by-fold fitting needs enough patients per fold; the page refuses settings where a fold is smaller than the model.</li></ul>' +
+  '<h3>How the data are simulated (paired design)</h3><ul><li>Every repetition draws a new Phase 3 trial and a new Phase 2 trial. All twins are trained again, and every method analyses this same pair.</li>' +
+  '<li>So a difference between two methods is a paired difference, and no single historical data set is reused across repetitions.</li><li>Order of the random draws in a repetition: Phase 3 patients, Phase 2 patients, folds. Forest and boosting take their random numbers from separate streams, one per twin and fold, so the data and the other methods do not change when a method is switched on or off.</li>' +
+  '<li>“Compare several values of” runs the same simulation at several Phase 3 sizes, Phase 2 sizes or numbers of folds. Every size gets its own trials; every K uses the same trials.</li><li>The number of CPU threads changes only the speed.</li></ul>' +
+  '<h3>Reading the results</h3><ul><li><b>Power</b>: share of repetitions with p below α when there is an effect. <b>Type I error</b>: the same share when the effect is switched off (section 1); it should be α.</li>' +
+  '<li><b>Coverage</b>: share of repetitions whose 95% interval contains the true effect; it should be 95%. With an effect it is the usual check of validity; a 95% interval that covers 95% of the time is a 5% test of the true value.</li>' +
+  '<li><b>Patients saved</b> = Phase 3 size × (1 − variance of the estimate ÷ variance of the reference). It is the number of patients the method can do without and still be as precise as the reference method. It assumes the variance falls in proportion to 1 / size. Its range comes from the Monte Carlo error of the variance ratio and is approximate.</li>' +
+  '<li><b>The wording in the boxes follows two fixed rules.</b> A rate is called consistent with its target when it lies within 1.96 Monte Carlo standard errors of the target. A difference from the reference is named higher, lower or a saving only when it is beyond 1.96 of its Monte Carlo standard error; otherwise the box says it is not distinguishable at this number of repetitions.</li>' +
+  '<li>“Technical details” holds bias, N × variance (comparable across trial sizes and with the benchmarks), mean SE ÷ true SD (1 is ideal; below 1 the method is too optimistic), twin R (correlation of twin score and outcome among Phase 3 controls) and the share of flat twins.</li></ul>' +
+  '<h3>Precision of a browser run</h3><p>With 500 repetitions a power estimate has a standard error of about 2 points, with 2,000 about 1 point. Paired differences between methods are more precise, but differences below one point need far more repetitions than a browser run.</p>' +
+  '<h3>Presets</h3><p>The first three presets are the one-, two- and three-covariate models of the first PREDCOVA paper. The seven-covariate presets follow the published simulation model of Højbjerre-Frandsen and Schuler; the covariates x1 to x7 here are W1 to W7 of that paper. Check the formulas against the source before relying on them.</p>';
+
+// ---------------------------------------------------------------------------
+// Start
+// ---------------------------------------------------------------------------
+renderSetup(); renderData(); renderLog(); renderSim(); selectTab('trial'); drawTrial();
+if (!TRIAL) renderTrial();
+window.PCL = { CORE: CORE, state: () => ({ ST, SIM, TRIAL }), runSim, renderSetup, drawTrial };
+})();
+
+</script>
+
+</body>
+</html>
